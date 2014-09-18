@@ -1,0 +1,2 @@
+you need the sdl2 library:
+  https://www.libsdl.org/
