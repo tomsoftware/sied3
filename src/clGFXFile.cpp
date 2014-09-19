@@ -10,13 +10,30 @@
 //#define RGB555_TO_RGB888_FAKTOR 1.02822580645
 #define RGB555_TO_RGB888_FAKTOR 1.03
 
-
 clGFXFile::clGFXFile(const char * fileName)
+{
+	for (int i = 0; i < enum_GFX_Type::GFX_Type____COUNT; i++)
+	{
+		m_gfxObjects[i].objects = NULL;
+		m_gfxObjects[i].count = 0;
+	}
+
+	if (fileName != NULL) openGFXFile(fileName);
+}
+
+
+
+bool clGFXFile::openGFXFile(const char * fileName)
 {
 	m_filename = fileName;
 	m_F.readFromFile(clConfig::getPath(clConfig::CONFIG_GFX_Path), fileName);
 	m_FR = m_F.getFileReader();
 
+	for (int i = 0; i < enum_GFX_Type::GFX_Type____COUNT; i++)
+	{
+		m_gfxObjects[i].objects = NULL;
+		m_gfxObjects[i].count = 0;
+	}
 
 	if (!m_FR->eof())
 	{
@@ -24,7 +41,7 @@ clGFXFile::clGFXFile(const char * fileName)
 		if (magic != 0x00041304)
 		{
 			m_error.AddError("Not a Siedler3 GFX File: %s", fileName);
-			return;
+			return false;
 		}
 
 		//- @offset:48 - Filesize of this File
@@ -32,7 +49,7 @@ clGFXFile::clGFXFile(const char * fileName)
 		if (fs_lenght != m_FR->length())
 		{
 			m_error.AddError("GFX File size mismatch: %s", fileName);
-			return;
+			return false;
 		}
 
 		//- read offsets to Image-Object Index Table
@@ -94,6 +111,8 @@ clGFXFile::clGFXFile(const char * fileName)
 			
 		}
 	}
+
+	return true;
 }
 
 
@@ -142,61 +161,135 @@ int clGFXFile::readSequenz(enum_GFX_Type GFX_Type, int sequenzeId)
 
 
 //-------------------------------------//
+int clGFXFile::getAnimationInfoFrameCount(int id)
+{
+	ty_gfxObjects * gfxOb = &m_gfxObjects[enum_GFX_Type::GFX_Type_AnimationInfo];
+	if ((id < 0) && (id >= gfxOb->count)) return 0;
+	
+	return m_FR->readIntBE(4, gfxOb->objects[id].HaedOffset);
+}
+
+
+//-------------------------------------//
+bool clGFXFile::getAnimationInfo(GFX_ObjectAnimationFrame * outGFXObject, int id, int frame)
+{
+	if (outGFXObject == NULL) return false;
+
+	ty_gfxObjects * gfxOb = &m_gfxObjects[enum_GFX_Type::GFX_Type_AnimationInfo];
+	if ((id < 0) && (id >= gfxOb->count))
+	{
+		outGFXObject->object_id = -1;
+		outGFXObject->torso_id = -1;
+		outGFXObject->shadow_id = -1;
+
+		m_error.AddError("(getAnimationInfos) Animation ID (%i) not found", id);
+		return false;
+	}
+
+	int offset = gfxOb->objects[id].HaedOffset;
+	m_FR->setOffset(offset);
+
+	int frameCount = m_FR->readIntBE();
+
+	if ((frame < 0) && (frame >= frameCount))
+	{
+		outGFXObject->object_id = -1;
+		outGFXObject->torso_id = -1;
+		outGFXObject->shadow_id = -1;
+
+		m_error.AddError("(getAnimationInfos) Frame %i (max: %i) in Animation ID (%i) not found", frame, frameCount, id);
+		return false;
+	}
+
+	//- frames are in reverse order 
+	frame = frameCount - frame-1;
+
+	//- jump to Animation frame information
+	m_FR->setOffset(offset + 4 + 24 * frame);
+
+	outGFXObject->posX =  m_FR->readSignedWordBE();
+	outGFXObject->posY = m_FR->readSignedWordBE();
+
+	outGFXObject->object_id = m_FR->readIntBE(2);
+	outGFXObject->object_file = m_FR->readIntBE(2);
+
+	outGFXObject->shadow_id= m_FR->readIntBE(2);
+	outGFXObject->shadow_file = m_FR->readIntBE(2);
+
+	outGFXObject->torso_id = m_FR->readIntBE(2);
+	outGFXObject->torso_file = m_FR->readIntBE(2);
+
+	outGFXObject->object_frame = m_FR->readIntBE(2);
+	outGFXObject->torso_frame = m_FR->readIntBE(2);
+
+	outGFXObject->flag3 = m_FR->readSignedWordBE();
+	outGFXObject->flag4 = m_FR->readSignedWordBE();
+
+	return true;
+}
+
+
+//-------------------------------------//
 bool clGFXFile::getTextureLandscape(GFX_ObjectTexture *outGFXObject, SDL_Renderer* renderer, int id)
 {
 	ty_gfxObjects * gfxOb = &m_gfxObjects[enum_GFX_Type::GFX_Type_Landscape];
 
-	if ((id >= 0) && (id< gfxOb->count))
+	if ((id < 0) && (id >= gfxOb->count))
 	{
-		//- no sequenz
-		ty_ImageHead imgHead;
+		outGFXObject->xRel = 0;
+		outGFXObject->yRel = 0;
+		outGFXObject->height = 0;
+		outGFXObject->width = 0;
+		outGFXObject->image = NULL;
 
-		//- read Haeder of Image
-		readImageHeader(&imgHead, gfxOb->objects[id].HaedOffset);
-
-
-		SDL_Texture* newTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, imgHead.width, imgHead.height);
-		if (newTexture == 0)
-		{
-			m_error.AddError("(getTextureLandscape) SDL_CreateTexture error: %s", SDL_GetError());
-			return NULL;
-		}
-
-		//- get buffer for new pixel data
-		int *imgData = new int[imgHead.width * imgHead.height];
-
-		//- read Pixel Data of Image
-		readImageData(imgData, imgHead.fileOffset, imgHead.width, imgHead.height, 0, 0, imgHead.width);
-
-		//- update Texture
-		if (SDL_UpdateTexture(newTexture, NULL, imgData, imgHead.width*sizeof(int)) != 0)
-		{
-			delete imgData;
-			m_error.AddError("(getTextureLandscape) SDL_UpdateTexture error: %s", SDL_GetError());
-			return NULL;
-		}
-
-		delete imgData;
-
-		outGFXObject->image = newTexture;
-		outGFXObject->xRel = imgHead.xRel;
-		outGFXObject->yRel = imgHead.yRel;
-		outGFXObject->height = imgHead.height;
-		outGFXObject->width = imgHead.width;
-		return true;
-
-	}
-	else
-	{
 		m_error.AddError("(getTextureLandscape) Texture ID (%i) not found", id);
+
+		return false;
 	}
 
-	outGFXObject->xRel = 0;
-	outGFXObject->yRel = 0;
-	outGFXObject->height = 0;
-	outGFXObject->width = 0;
-	outGFXObject->image = NULL;
-	return false;
+
+	//- no sequenz so read image header...
+	ty_ImageHead imgHead;
+
+	//- read Haeder of Image
+	readImageHeader(&imgHead, gfxOb->objects[id].HaedOffset);
+
+
+	SDL_Texture* newTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, imgHead.width, imgHead.height);
+	if (newTexture == 0)
+	{
+		m_error.AddError("(getTextureLandscape) SDL_CreateTexture error: %s", SDL_GetError());
+		return NULL;
+	}
+
+	//- get buffer for new pixel data
+	int *imgData = new int[imgHead.width * imgHead.height];
+
+	//- read Pixel Data of Image
+	readImageData(imgData, imgHead.fileOffset, imgHead.width, imgHead.height, 0, 0, imgHead.width);
+
+	//- update Texture
+	if (SDL_UpdateTexture(newTexture, NULL, imgData, imgHead.width*sizeof(int)) != 0)
+	{
+		delete imgData;
+		m_error.AddError("(getTextureLandscape) SDL_UpdateTexture error: %s", SDL_GetError());
+		return NULL;
+	}
+
+	delete imgData;
+
+	outGFXObject->image = newTexture;
+	outGFXObject->xRel = imgHead.xRel;
+	outGFXObject->yRel = imgHead.yRel;
+	outGFXObject->height = imgHead.height;
+	outGFXObject->width = imgHead.width;
+	return true;
+
+
+
+
+
+
 }
 
 
@@ -638,6 +731,8 @@ bool clGFXFile::readImageHeader(ty_ImageHead * imgHead, int offset, bool hasMagi
 //-------------------------------------//
 clGFXFile::~clGFXFile()
 {
+	m_error.AddDebug("unload gfx file: %s", m_filename);
+
 	//- read index Image-Object-Index-Table Header
 	for (int i = 0; i < enum_GFX_Type::GFX_Type____COUNT; i++)
 	{

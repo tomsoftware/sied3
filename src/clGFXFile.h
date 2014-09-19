@@ -19,6 +19,23 @@ public:
 		int height=0;
 	};
 
+	struct GFX_ObjectAnimationFrame
+	{
+		short posX;
+		short posY;
+		//unsigned short flags;
+		unsigned short object_file;
+		unsigned short object_id;
+		unsigned short torso_id;
+		unsigned short torso_file;
+		unsigned short shadow_id;
+		unsigned short shadow_file;
+		unsigned short object_frame;
+		unsigned short torso_frame;
+		short flag3;
+		short flag4;
+	};
+
 	struct GFX_ObjectSurface
 	{
 		SDL_Surface *image=NULL;
@@ -36,7 +53,7 @@ public:
 		GFX_Type_Object = 3,
 		GFX_Type_Torso = 4,
 		GFX_Type_Shadow = 5,
-		GFX_Type_Unknown7 = 6,
+		GFX_Type_AnimationInfo = 6,
 		GFX_Type_Pallet = 7,
 		GFX_Type____COUNT,
 	};
@@ -59,9 +76,9 @@ private:
 
 	struct ty_gfxObjects
 	{
-		ty_gfxSequenz *objects;
-		int offset;
-		int count;
+		ty_gfxSequenz *objects=NULL;
+		int offset=0;
+		int count=0;
 		int word1;
 		int word2;
 		int HeaderSize;
@@ -92,17 +109,24 @@ private:
 
 	int readSequenz(enum_GFX_Type GFX_Type, int id);
 public:
-	clGFXFile(const char * fileName);
+	clGFXFile(const char * fileName=NULL);
 	~clGFXFile();
+
+	bool openGFXFile(const char * fileName);
+
 	bool getTextureLandscape(GFX_ObjectTexture *outGFXObject, SDL_Renderer* renderer, int id);
 	bool getTextureObject(GFX_ObjectTexture *outGFXObject, SDL_Renderer* renderer, int sequenzeId, int shadowId, int frame);
 	bool getTextureTorso(GFX_ObjectSurface * outGFXObject, SDL_Renderer* renderer, int id, int frame);
+
+	bool getAnimationInfo(GFX_ObjectAnimationFrame * outGFXObject, int id, int frame);
+	int getAnimationInfoFrameCount(int id);
+
 	SDL_Palette* getPalette(int paletteId, int colorVariationIndex);
 };
 
 
 __declspec(selectany)
-const char * const clGFXFile::GFX_TYPE_NAMES[] = { "", "Landscape", "Gui", "Objects", "Torso", "Shadow", "7", "Pallet", "" };
+const char * const clGFXFile::GFX_TYPE_NAMES[] = { "", "Landscape", "Gui", "Objects", "Torso", "Shadow", "AnimationInfo", "Pallet", "" };
 
 
 #endif

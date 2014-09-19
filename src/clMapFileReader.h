@@ -20,7 +20,7 @@ public:
 
 	enum enum_map_file_parts
 	{
-		PART_TYPE_EOF = 0, // Endo of File and Padding
+		PART_TYPE_EOF = 0, // End of File and Padding
 		PART_TYPE_MapInfo = 1,
 		PART_TYPE_PlayerInfo = 2,
 		PART_TYPE_TeamInfo = 3,
