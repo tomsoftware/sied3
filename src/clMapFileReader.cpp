@@ -101,7 +101,7 @@ bool clMapFileReader::loadMap(clFileReader * FR, enum_map_file_version fileVersi
 
 
 //-------------------------------------//
-bool clMapFileReader::readMapArea(int *outBuffer_AraeHeightObjects, int sizeOfBuffer_AraeHeightObject, int *outBuffer_AccessiblePlayerResources, int sizeOfBuffer_AccessiblePlayerResources)
+bool clMapFileReader::readMapArea(unsigned int *outBuffer_AraeHeightObjects, int sizeOfBuffer_AraeHeightObject, unsigned int *outBuffer_AccessiblePlayerResources, int sizeOfBuffer_AccessiblePlayerResources)
 {
 	ty_file_part *FPart = &m_fileParts[enum_map_file_parts::PART_TYPE_Area];
 
@@ -125,8 +125,8 @@ bool clMapFileReader::readMapArea(int *outBuffer_AraeHeightObjects, int sizeOfBu
 
 	if (inBuffer != NULL)
 	{
-		int * out1 = NULL;
-		int * out2 = NULL;
+		unsigned int * out1 = NULL;
+		unsigned int * out2 = NULL;
 
 		//- read the whol data
 		if ((outBuffer_AraeHeightObjects != NULL) && (sizeOfBuffer_AraeHeightObject == dataCount)) out1 = outBuffer_AraeHeightObjects;
@@ -136,19 +136,20 @@ bool clMapFileReader::readMapArea(int *outBuffer_AraeHeightObjects, int sizeOfBu
 		{
 			for (int i = dataCount; i > 0; i--)
 			{
-				const unsigned char v_height = *(++inBuffer);
-				const unsigned char v_Type = *(++inBuffer);
-				const unsigned char v_Object = *(++inBuffer);
+				const unsigned char v_height = *inBuffer++;
+				const unsigned char v_Type = *inBuffer++;
+				const unsigned char v_Object = *inBuffer++;
 
 				if (out1)
 				{
-					*out1 = (v_height) | (v_Type << 8) | (v_Object << 16);
+					int v = (v_height) | (v_Type << 8) | (v_Object << 16);
+					*out1 = v;
 					out1++;
 				}
 
-				const unsigned char v_plyerClaim = *(++inBuffer);
-				const unsigned char v_accessible = *(++inBuffer);
-				const unsigned char v_resources = *(++inBuffer);
+				const unsigned char v_plyerClaim = *inBuffer++;
+				const unsigned char v_accessible = *inBuffer++;
+				const unsigned char v_resources = *inBuffer++;
 
 				if (out2)
 				{
@@ -388,7 +389,7 @@ const char * clMapFileReader::getMapPartTypeName(enum_map_file_parts partType)
 		case enum_map_file_parts::PART_TYPE_Resources: return "Resources";
 		case enum_map_file_parts::PART_TYPE_QuestText: return "QuestText";
 		case enum_map_file_parts::PART_TYPE_QuestTip: return "QuestTip";
-		case enum_map_file_parts::PART_TYPE_EOF: return "EOF";
+		case enum_map_file_parts::PART_TYPE_EOF: return "(EOF)";
 	}
 
 	return "?";

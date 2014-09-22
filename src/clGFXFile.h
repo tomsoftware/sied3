@@ -19,6 +19,15 @@ public:
 		int height=0;
 	};
 
+	struct GFX_ObjectSurface
+	{
+		SDL_Surface *image = NULL;
+		int xRel = 0;
+		int yRel = 0;
+		int width = 0;
+		int height = 0;
+	};
+
 	struct GFX_ObjectAnimationFrame
 	{
 		short posX;
@@ -32,18 +41,11 @@ public:
 		unsigned short shadow_file;
 		unsigned short object_frame;
 		unsigned short torso_frame;
-		short flag3;
-		short flag4;
+		short sound_flag1;
+		short sound_flag2;
 	};
 
-	struct GFX_ObjectSurface
-	{
-		SDL_Surface *image=NULL;
-		int xRel=0;
-		int yRel=0;
-		int width=0;
-		int height=0;
-	};
+
 
 	enum enum_GFX_Type
 	{
@@ -58,6 +60,12 @@ public:
 		GFX_Type____COUNT,
 	};
 
+	enum enum_COLOR_Type
+	{
+		COLOR_BIT_DEPTH_555 = 0x7c,
+		COLOR_BIT_DEPTH_565 = 0xf8
+	};
+
 	static const char * const GFX_TYPE_NAMES[];
 
 
@@ -66,6 +74,8 @@ private:
 	clFile m_F = clFile();
 	const char * m_filename;
 	clError m_error = clError("clGFX");
+
+	enum_COLOR_Type m_color_bit_depth = enum_COLOR_Type::COLOR_BIT_DEPTH_555;
 
 	struct ty_gfxSequenz
 	{
@@ -118,10 +128,15 @@ public:
 	bool getTextureObject(GFX_ObjectTexture *outGFXObject, SDL_Renderer* renderer, int sequenzeId, int shadowId, int frame);
 	bool getTextureTorso(GFX_ObjectSurface * outGFXObject, SDL_Renderer* renderer, int id, int frame);
 
+	int getTextureLandscapeCount();
+
 	bool getAnimationInfo(GFX_ObjectAnimationFrame * outGFXObject, int id, int frame);
 	int getAnimationInfoFrameCount(int id);
 
 	SDL_Palette* getPalette(int paletteId, int colorVariationIndex);
+	static void delete_GFX_Object(GFX_ObjectTexture *outGFXObject);
+	static void delete_GFX_Object(GFX_ObjectSurface *outGFXObject);
+	
 };
 
 

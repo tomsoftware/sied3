@@ -10,6 +10,9 @@
 //#define RGB555_TO_RGB888_FAKTOR 1.02822580645
 #define RGB555_TO_RGB888_FAKTOR 1.03
 
+//- 255/252 = 1.0119047619
+#define RGB565_TO_RGB888_FAKTOR 1.012
+
 clGFXFile::clGFXFile(const char * fileName)
 {
 	for (int i = 0; i < enum_GFX_Type::GFX_Type____COUNT; i++)
@@ -43,6 +46,16 @@ bool clGFXFile::openGFXFile(const char * fileName)
 			m_error.AddError("Not a Siedler3 GFX File: %s", fileName);
 			return false;
 		}
+
+		//- @offset:33 - Color depth
+		enum_COLOR_Type bit_depth = (enum_COLOR_Type) m_FR->readIntBE(1, 33);
+		if (( bit_depth != enum_COLOR_Type::COLOR_BIT_DEPTH_555) && (bit_depth != enum_COLOR_Type::COLOR_BIT_DEPTH_565))
+		{
+			m_error.AddError("GFX File value for bit depth is unknown: %i", bit_depth);
+			return false;
+		}
+		m_color_bit_depth = bit_depth;
+
 
 		//- @offset:48 - Filesize of this File
 		int fs_lenght = m_FR->readIntBE(4,48);
@@ -164,7 +177,7 @@ int clGFXFile::readSequenz(enum_GFX_Type GFX_Type, int sequenzeId)
 int clGFXFile::getAnimationInfoFrameCount(int id)
 {
 	ty_gfxObjects * gfxOb = &m_gfxObjects[enum_GFX_Type::GFX_Type_AnimationInfo];
-	if ((id < 0) && (id >= gfxOb->count)) return 0;
+	if ((id < 0) || (id >= gfxOb->count)) return 0;
 	
 	return m_FR->readIntBE(4, gfxOb->objects[id].HaedOffset);
 }
@@ -176,7 +189,7 @@ bool clGFXFile::getAnimationInfo(GFX_ObjectAnimationFrame * outGFXObject, int id
 	if (outGFXObject == NULL) return false;
 
 	ty_gfxObjects * gfxOb = &m_gfxObjects[enum_GFX_Type::GFX_Type_AnimationInfo];
-	if ((id < 0) && (id >= gfxOb->count))
+	if ((id < 0) || (id >= gfxOb->count))
 	{
 		outGFXObject->object_id = -1;
 		outGFXObject->torso_id = -1;
@@ -191,7 +204,7 @@ bool clGFXFile::getAnimationInfo(GFX_ObjectAnimationFrame * outGFXObject, int id
 
 	int frameCount = m_FR->readIntBE();
 
-	if ((frame < 0) && (frame >= frameCount))
+	if ((frame < 0) || (frame >= frameCount))
 	{
 		outGFXObject->object_id = -1;
 		outGFXObject->torso_id = -1;
@@ -213,17 +226,17 @@ bool clGFXFile::getAnimationInfo(GFX_ObjectAnimationFrame * outGFXObject, int id
 	outGFXObject->object_id = m_FR->readIntBE(2);
 	outGFXObject->object_file = m_FR->readIntBE(2);
 
-	outGFXObject->shadow_id= m_FR->readIntBE(2);
-	outGFXObject->shadow_file = m_FR->readIntBE(2);
-
 	outGFXObject->torso_id = m_FR->readIntBE(2);
 	outGFXObject->torso_file = m_FR->readIntBE(2);
+
+	outGFXObject->shadow_id = m_FR->readIntBE(2);
+	outGFXObject->shadow_file = m_FR->readIntBE(2);
 
 	outGFXObject->object_frame = m_FR->readIntBE(2);
 	outGFXObject->torso_frame = m_FR->readIntBE(2);
 
-	outGFXObject->flag3 = m_FR->readSignedWordBE();
-	outGFXObject->flag4 = m_FR->readSignedWordBE();
+	outGFXObject->sound_flag1 = m_FR->readSignedWordBE();
+	outGFXObject->sound_flag2 = m_FR->readSignedWordBE();
 
 	return true;
 }
@@ -234,7 +247,7 @@ bool clGFXFile::getTextureLandscape(GFX_ObjectTexture *outGFXObject, SDL_Rendere
 {
 	ty_gfxObjects * gfxOb = &m_gfxObjects[enum_GFX_Type::GFX_Type_Landscape];
 
-	if ((id < 0) && (id >= gfxOb->count))
+	if ((id < 0) || (id >= gfxOb->count))
 	{
 		outGFXObject->xRel = 0;
 		outGFXObject->yRel = 0;
@@ -343,7 +356,7 @@ bool clGFXFile::getTextureTorso(GFX_ObjectSurface *outGFXObject, SDL_Renderer* r
 	}
 	else
 	{
-		m_error.AddError("(getTextureObject) Texture ID (%i) not found", id);
+		m_error.AddError("(getTextureTorso) Texture ID (%i) not found", id);
 	}
 
 	/*
@@ -374,10 +387,27 @@ SDL_Palette* clGFXFile::getPalette(int paletteId, int colorVariationIndex)
 
 			SDL_Color color;
 
-			//- scale colors to 255
-			color.b = (int) (RGB555_TO_RGB888_FAKTOR * ((v << 3) & 0xF8));
-			color.g = (int) (RGB555_TO_RGB888_FAKTOR * ((v >> 2) & 0xF8));
-			color.r = (int) (RGB555_TO_RGB888_FAKTOR * ((v >> 7) & 0xF8));
+
+			if (m_color_bit_depth == enum_COLOR_Type::COLOR_BIT_DEPTH_565)
+			{
+				//- scale colors to 255
+				color.b = (int) (RGB555_TO_RGB888_FAKTOR * ((v << 3) & 0xF8));
+				color.g = (int) (RGB565_TO_RGB888_FAKTOR * ((v >> 3) & 0xFC));
+				color.r = (int) (RGB555_TO_RGB888_FAKTOR * ((v >> 8) & 0xF8));
+			}
+			else if (m_color_bit_depth == enum_COLOR_Type::COLOR_BIT_DEPTH_555)
+			{
+
+				//- scale colors to 255
+				color.b = (int) (RGB555_TO_RGB888_FAKTOR * ((v << 3) & 0xF8));
+				color.g = (int) (RGB555_TO_RGB888_FAKTOR * ((v >> 2) & 0xF8));
+				color.r = (int) (RGB555_TO_RGB888_FAKTOR * ((v >> 7) & 0xF8));
+			}
+			else
+			{
+				color.b = color.r = color.g = 0;
+			}
+
 			color.a = 255;
 
 
@@ -403,7 +433,29 @@ SDL_Palette* clGFXFile::getPalette(int paletteId, int colorVariationIndex)
 	return NULL;
 }
 
+//-------------------------------------//
+void clGFXFile::delete_GFX_Object(GFX_ObjectSurface *outGFXObject)
+{
+	if (outGFXObject->image != NULL)
+	{
+		SDL_FreeSurface(outGFXObject->image);
+		outGFXObject->image = NULL;
+		outGFXObject->width = 0;
+		outGFXObject->height = 0;
+	}
+}
 
+//-------------------------------------//
+void clGFXFile::delete_GFX_Object(GFX_ObjectTexture *outGFXObject)
+{
+	if (outGFXObject->image != NULL)
+	{
+		SDL_DestroyTexture(outGFXObject->image);
+		outGFXObject->image = NULL;
+		outGFXObject->width = 0;
+		outGFXObject->height = 0;
+	}
+}
 //-------------------------------------//
 bool clGFXFile::getTextureObject(GFX_ObjectTexture *outGFXObject, SDL_Renderer* renderer, int sequenzeId, int shadowId, int frame)
 {
@@ -518,12 +570,29 @@ bool clGFXFile::readImageData(int * outImgData, int fileOffset, int width, int h
 			{
 				int v = m_FR->readIntBE(2);
 
-				//- scale colors to 255
-				int b = (int) (RGB555_TO_RGB888_FAKTOR * ((v << 3) & 0xF8));
-				int g = (int) (RGB555_TO_RGB888_FAKTOR * ((v >> 2) & 0xF8));
-				int r = (int) (RGB555_TO_RGB888_FAKTOR * ((v >> 7) & 0xF8));
+				int r;
+				int g;
+				int b;
 
-				//- info: (v & 0x8000)==0
+				//- scale colors to 255
+				if (m_color_bit_depth == enum_COLOR_Type::COLOR_BIT_DEPTH_565 )
+				{
+					b = (int) (RGB555_TO_RGB888_FAKTOR * ((v << 3) & 0xF8));
+					g = (int) (RGB565_TO_RGB888_FAKTOR * ((v >> 3) & 0xFC));
+					r = (int) (RGB555_TO_RGB888_FAKTOR * ((v >> 8) & 0xF8));
+				}
+				else if (m_color_bit_depth == enum_COLOR_Type::COLOR_BIT_DEPTH_555)
+				{
+					b = (int) (RGB555_TO_RGB888_FAKTOR * ((v << 3) & 0xF8));
+					g = (int) (RGB555_TO_RGB888_FAKTOR * ((v >> 2) & 0xF8));
+					r = (int) (RGB555_TO_RGB888_FAKTOR * ((v >> 7) & 0xF8));
+					//- info: (v & 0x8000)==0
+				}
+				else
+				{
+					r = g = b = 0;
+				}
+
 
 				//-       Alpha                  Color
 				*pOut = 0x000000FF | (r << 24) | (g << 16) | (b << 8);
@@ -756,4 +825,11 @@ clGFXFile::~clGFXFile()
 			m_gfxObjects[i].objects = NULL;
 		}
 	}
+}
+
+
+//-------------------------------------//
+int clGFXFile::getTextureLandscapeCount()
+{
+	return m_gfxObjects[enum_GFX_Type::GFX_Type_Landscape].count;
 }
