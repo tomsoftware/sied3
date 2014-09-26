@@ -8,12 +8,15 @@
 #include "clGFXFile.h"
 #include "clError.h"
 #include "clMapFileReader.h"
+//#include "sied3Objects.h"
+#include "clGameObjects.h"
 
 int main(int argc, char* argv []);
 void gameLoop(SDL_Renderer *renderer);
 void loadResource(SDL_Renderer *renderer);
 void loadMap(SDL_Renderer *renderer, const char * fileName);
 void drawMap(SDL_Renderer *renderer, int x, int y);
+void drawMapObjects(SDL_Renderer *renderer, int posX, int posY);
 
 struct ty_Animation
 {
@@ -28,6 +31,8 @@ SDL_Window *m_sdl_window;
 
 clGFXFile::GFX_ObjectTexture txBuild;
 clGFXFile::GFX_ObjectTexture txLandscape[255];
+clGFXFile::GFX_ObjectTexture txObjects[255];
+clGFXFile::GFX_ObjectTexture txBuildings[255];
 clGFXFile::GFX_ObjectTexture txSied;
 clGFXFile::GFX_ObjectSurface txTorso;
 
@@ -57,6 +62,7 @@ clGFXFile gfxSied11;
 clGFXFile gfxSied10;
 clGFXFile gfxAnimation;
 clGFXFile gfxBuilding;
+
 
 
 #endif

@@ -125,7 +125,7 @@ public:
 	bool openGFXFile(const char * fileName);
 
 	bool getTextureLandscape(GFX_ObjectTexture *outGFXObject, SDL_Renderer* renderer, int id);
-	bool getTextureObject(GFX_ObjectTexture *outGFXObject, SDL_Renderer* renderer, int sequenzeId, int shadowId, int frame);
+	bool getTextureObject(GFX_ObjectTexture *outGFXObject, SDL_Renderer* renderer, int sequenzeId, int shadowId, int frame=0);
 	bool getTextureTorso(GFX_ObjectSurface * outGFXObject, SDL_Renderer* renderer, int id, int frame);
 
 	int getTextureLandscapeCount();

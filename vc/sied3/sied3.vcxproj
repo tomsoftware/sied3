@@ -89,6 +89,7 @@
     <ClCompile Include="..\..\src\clFile.cpp" />
     <ClCompile Include="..\..\src\clFileReader.cpp" />
     <ClCompile Include="..\..\src\clFont.cpp" />
+    <ClCompile Include="..\..\src\clGameObjects.cpp" />
     <ClCompile Include="..\..\src\clGFXFile.cpp" />
     <ClCompile Include="..\..\src\clMapFileReader.cpp" />
     <ClCompile Include="..\..\src\main.cpp" />
@@ -99,6 +100,7 @@
     <ClInclude Include="..\..\src\clFile.h" />
     <ClInclude Include="..\..\src\clFileReader.h" />
     <ClInclude Include="..\..\src\clFont.h" />
+    <ClInclude Include="..\..\src\clGameObjects.h" />
     <ClInclude Include="..\..\src\clGFXFile.h" />
     <ClInclude Include="..\..\src\clMapFileReader.h" />
     <ClInclude Include="..\..\src\main.h" />
