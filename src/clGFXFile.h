@@ -117,6 +117,8 @@ private:
 	bool readImageDataClear(int * outImgData, int width, int height);
 	bool readIndexData(Uint8 * outImgData, int fileOffset, int width, int height, int x0, int y0, int outImgWidth);
 
+	void cleanUp();
+
 	int readSequenz(enum_GFX_Type GFX_Type, int id);
 public:
 	clGFXFile(const char * fileName=NULL);

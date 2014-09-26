@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
 	}
 
 
-	SDL_Renderer *renderer = SDL_CreateRenderer(m_sdl_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	SDL_Renderer *renderer = SDL_CreateRenderer(m_sdl_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_TARGETTEXTURE);
 	if (renderer == nullptr){
 		SDL_DestroyWindow(m_sdl_window);
 		m_error.AddError("SDL_CreateRenderer Error", SDL_GetError());
@@ -26,8 +26,10 @@ int main(int argc, char* argv[])
 	}
 
 
-
-	loadMap(renderer, "448_DEMO.map");
+	
+	//loadMap(renderer, "texture.map", clMapFileReader::enum_map_folders::FOLDER_USER);
+	//loadMap(renderer, "448_DEMO.map", clMapFileReader::enum_map_folders::FOLDER_USER);
+	loadMap(renderer, "flach.map", clMapFileReader::enum_map_folders::FOLDER_USER);
 	loadResource(renderer);
 	gameLoop(renderer);
 
@@ -142,7 +144,7 @@ void gameLoop(SDL_Renderer *renderer)
 
 		//////////////////////
 		//- <Preview>
-		SDL_Rect destPosMapPreview = { 1000, 50, 150 + 150/2, 150 };
+		SDL_Rect destPosMapPreview = { 1000, 50, 315, 209 };
 		SDL_RenderCopy(renderer, mapPreview, NULL, &destPosMapPreview);
 		//- </Preview>
 		//////////////////////
@@ -177,7 +179,7 @@ void gameLoop(SDL_Renderer *renderer)
 
 			if ((gfxAniFrame.sound_flag1 != -1) || (gfxAniFrame.sound_flag2 != -1))
 			{
-				m_error.AddDebug("sound: %i %i", gfxAniFrame.sound_flag1, gfxAniFrame.sound_flag2);
+				//m_error.AddDebug("sound: %i %i", gfxAniFrame.sound_flag1, gfxAniFrame.sound_flag2);
 			}
 
 			if (((gfxAniFrame.torso_file < 10) || (gfxAniFrame.object_file <10) || (gfxAniFrame.shadow_file < 10)) && ((gfxAniFrame.torso_file > 12) || (gfxAniFrame.object_file > 12) || (gfxAniFrame.shadow_file > 12)))
@@ -256,11 +258,6 @@ void drawMap(SDL_Renderer *renderer, int posX, int posY)
 	if (m_map_AraeHeightObject != NULL)
 	{
 
-		//unsigned int * pBuf0 = m_map_AraeHeightObject + ( posY)*m_mapWidth + posX;
-		//int v0 = *pBuf0;
-		//m_error.AddDebug("(%i,%i) = %i", posX, posY, (v0 >> 8) & 0xFF);
-
-
 		for (int curY = 0; curY < 50; curY++)
 		{
 			int sumY = curY + posY;
@@ -270,25 +267,25 @@ void drawMap(SDL_Renderer *renderer, int posX, int posY)
 				for (int x = 0; x < 70; x++)
 				{
 					int curX = x + curY ;
-					int sumX = curX + posX-20;
+					int sumX = curX + posX - 20;
 					unsigned int * pRowData = m_map_AraeHeightObject + sumY*(m_mapWidth + m_mapHeight);
 
-					if ((sumX > 0) && (sumX < (m_mapWidth)))
+					if ((sumX >= 0) && (sumX < m_mapWidth))
 					{
 						int v = *(pRowData + sumX);
 
 						int area = (v >> 8) & 0xFF;
-						int obj = (v >> 16) & 0xFF;
 						
-						int outX = curX * 16 - curY * 8 * 16 / 9;
-						int outY = curY * 16;
+						int outX = curX * 16 - curY * 16;
+						int outY = curY * 16 * 9 / 8;
 
-						SDL_Rect posOut = { outX, outY, 16, 16 };
+						SDL_Rect posOut = { outX, outY, 16, 16 * 9 / 8 };
 						SDL_Rect posIn;
 
 						if (txLandscape[area].width == 128)
 						{
-							posIn = { (sumX % 8) * 16, (sumY % 8) * 9, 16, 9 };
+							//- Y: after 4 Blocks in y-direction, X increased by 128/2
+							posIn = { ((sumX - sumY % 8 + ((sumY / 4) % 2) * 4) % 8) * 16, (sumY % 8) * 16, 16, 16 };
 						}
 						else
 						{
@@ -312,11 +309,6 @@ void drawMapObjects(SDL_Renderer *renderer, int posX, int posY)
 	if (m_map_AraeHeightObject != NULL)
 	{
 
-		//unsigned int * pBuf0 = m_map_AraeHeightObject + (posY) *m_mapWidth + posX;
-		//int v0 = *pBuf0;
-		//m_error.AddDebug("(%i,%i) = %i", posX, posY, (v0 >> 8) & 0xFF);
-
-
 		for (int curY = 0; curY < 50; curY++)
 		{
 			int sumY = curY + posY;
@@ -339,13 +331,10 @@ void drawMapObjects(SDL_Renderer *renderer, int posX, int posY)
 
 							if (txObjects[obj].image != NULL)
 							{
-								int outX = curX * 16 - curY * 8 * 16 / 9;
-								int outY = curY * 16;
+								int outX = curX * 16 - curY * 16;
+								int outY = curY * 16 * 9 / 8;
 
 								SDL_Rect posOut = { outX, outY, txObjects[obj].width, txObjects[obj].height };
-
-
-
 
 
 								SDL_RenderCopy(renderer, txObjects[obj].image, NULL, &posOut);
@@ -363,10 +352,15 @@ void drawMapObjects(SDL_Renderer *renderer, int posX, int posY)
 
 	}
 }
+
+
 //-------------------------------------//
-void loadMap(SDL_Renderer *renderer, const char * fileName)
+void loadMap(SDL_Renderer *renderer, const char * fileName, clMapFileReader::enum_map_folders  mapType)
 {
-	clMapFileReader map = clMapFileReader(clMapFileReader::enum_map_folders::FOLDER_USER, fileName);
+	clMapFileReader map;
+
+	map.readMap(mapType, fileName);
+
 
 	m_mapWidth = map.getMapWidth();
 	m_mapHeight = map.getMapHeight();
@@ -385,7 +379,7 @@ void loadMap(SDL_Renderer *renderer, const char * fileName)
 	}
 	if (m_map_AccessiblePlayerResources != NULL)
 	{
-		delete m_map_AccessiblePlayerResources;
+		delete[] m_map_AccessiblePlayerResources;
 		m_map_AccessiblePlayerResources = NULL;
 	}
 
@@ -412,26 +406,26 @@ void loadResource(SDL_Renderer *renderer)
 
 
 	//- Landscape
-	clGFXFile gfxLand = clGFXFile("Siedler3_00.f8007e01f[ori].dat");
+	clGFXFile gfxLand = clGFXFile("Siedler3_00.f8007e01f.dat");
 
 	int count = gfxLand.getTextureLandscapeCount();
 
 
 	gfxLand.getTextureLandscape(&txLandscape[7], renderer, 10); //- Meer [OK]
-	gfxLand.getTextureLandscape(&txLandscape[16], renderer, 0); //- gras [OK]
+	gfxLand.getTextureLandscape(&txLandscape[16], renderer, 0); //- Gras [OK]
 	gfxLand.getTextureLandscape(&txLandscape[32], renderer, 21); //- Fels[OK]
 	gfxLand.getTextureLandscape(&txLandscape[48], renderer, 31); //- Strand[OK]
 	gfxLand.getTextureLandscape(&txLandscape[64], renderer, 18); //- Wüste [OK]
 	gfxLand.getTextureLandscape(&txLandscape[80], renderer, 7); //- Sumpf [OK]
 	gfxLand.getTextureLandscape(&txLandscape[128], renderer, 24); //- Eis [OK]
 	gfxLand.getTextureLandscape(&txLandscape[144], renderer, 4); //- Schlamm / Totes land [OK]
-	gfxLand.getTextureLandscape(&txLandscape[20], renderer, 20);
-	gfxLand.getTextureLandscape(&txLandscape[65], renderer, 19);
-	gfxLand.getTextureLandscape(&txLandscape[17], renderer, 22); //24,23
-	gfxLand.getTextureLandscape(&txLandscape[33], renderer, 23);
+	//gfxLand.getTextureLandscape(&txLandscape[20], renderer, 20);
+	//gfxLand.getTextureLandscape(&txLandscape[65], renderer, 19);
+	//gfxLand.getTextureLandscape(&txLandscape[17], renderer, 22); //24,23
+	//gfxLand.getTextureLandscape(&txLandscape[33], renderer, 23);
 
-	gfxLand.getTextureLandscape(&txLandscape[35], renderer, 165);
-	gfxLand.getTextureLandscape(&txLandscape[129], renderer, 166);
+	//gfxLand.getTextureLandscape(&txLandscape[35], renderer, 165);
+	//gfxLand.getTextureLandscape(&txLandscape[129], renderer, 166);
 
 	//- Objects
 	clGFXFile gfxObjects = clGFXFile("Siedler3_01.f8007e01f.dat");

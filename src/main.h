@@ -11,12 +11,6 @@
 //#include "sied3Objects.h"
 #include "clGameObjects.h"
 
-int main(int argc, char* argv []);
-void gameLoop(SDL_Renderer *renderer);
-void loadResource(SDL_Renderer *renderer);
-void loadMap(SDL_Renderer *renderer, const char * fileName);
-void drawMap(SDL_Renderer *renderer, int x, int y);
-void drawMapObjects(SDL_Renderer *renderer, int posX, int posY);
 
 struct ty_Animation
 {
@@ -25,14 +19,27 @@ struct ty_Animation
 	int count;
 };
 
+
+
+
+
+
+int main(int argc, char* argv []);
+void gameLoop(SDL_Renderer *renderer);
+void loadResource(SDL_Renderer *renderer);
+void loadMap(SDL_Renderer *renderer, const char * fileName, clMapFileReader::enum_map_folders mapType);
+void drawMap(SDL_Renderer *renderer, int x, int y);
+void drawMapObjects(SDL_Renderer *renderer, int posX, int posY);
+
+
 clError m_error = clError("main");
 
 SDL_Window *m_sdl_window;
 
 clGFXFile::GFX_ObjectTexture txBuild;
-clGFXFile::GFX_ObjectTexture txLandscape[255];
-clGFXFile::GFX_ObjectTexture txObjects[255];
-clGFXFile::GFX_ObjectTexture txBuildings[255];
+clGFXFile::GFX_ObjectTexture txLandscape[256];
+clGFXFile::GFX_ObjectTexture txObjects[256];
+clGFXFile::GFX_ObjectTexture txBuildings[256];
 clGFXFile::GFX_ObjectTexture txSied;
 clGFXFile::GFX_ObjectSurface txTorso;
 

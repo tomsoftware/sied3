@@ -6,7 +6,14 @@
 //#define RGB555_TO_RGB888_FAKTOR 1.02822580645
 #define RGB555_TO_RGB888_FAKTOR 1.03
 
+//-------------------------------------//
 clMapFileReader::clMapFileReader(enum_map_folders map_folder, const char * fileName)
+{
+	if ((map_folder != enum_map_folders::FOLDER_NONE) && (fileName!=NULL))	readMap(map_folder, fileName);
+}
+
+//-------------------------------------//
+void clMapFileReader::readMap(enum_map_folders map_folder, const char * fileName)
 {
 	std::string tmpFileName;
 	
@@ -14,10 +21,10 @@ clMapFileReader::clMapFileReader(enum_map_folders map_folder, const char * fileN
 
 	switch (map_folder)
 	{
-		case clMapFileReader::FOLDER_MULTI:		tmpFileName.append("MULTI\\");	break;
-		case clMapFileReader::FOLDER_SINGLE:	tmpFileName.append("SINGLE\\");	break;
-		case clMapFileReader::FOLDER_TUTORIAL:	tmpFileName.append("TUTORIAL\\");	break;
-		case clMapFileReader::FOLDER_USER:		tmpFileName.append("USER\\");	break;
+		case enum_map_folders::FOLDER_MULTI:	tmpFileName.append("MULTI\\");	break;
+		case enum_map_folders::FOLDER_SINGLE:	tmpFileName.append("SINGLE\\");	break;
+		case enum_map_folders::FOLDER_TUTORIAL:	tmpFileName.append("TUTORIAL\\");	break;
+		case enum_map_folders::FOLDER_USER:		tmpFileName.append("USER\\");	break;
 	}
 
 	tmpFileName.append(fileName);
@@ -325,7 +332,7 @@ SDL_Texture * clMapFileReader::getPreviewImage(SDL_Renderer* renderer, int shear
 		return NULL;
 	}
 
-	delete imgData;
+	delete[] imgData;
 
 	return newTexture;
 	

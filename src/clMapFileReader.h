@@ -12,11 +12,13 @@ class clMapFileReader
 public:
 	enum enum_map_folders
 	{
+		FOLDER_NONE,
 		FOLDER_MULTI,
 		FOLDER_SINGLE,
 		FOLDER_TUTORIAL,
 		FOLDER_USER
 	};
+
 
 	enum enum_map_file_parts
 	{
@@ -104,7 +106,9 @@ private:
 
 
 public:
-	clMapFileReader(enum_map_folders map_folder, const char * fileName);
+	clMapFileReader(enum_map_folders map_folder=FOLDER_NONE, const char * fileName="");
+	void readMap(enum_map_folders map_folder, const char * fileName);
+
 	SDL_Texture * getPreviewImage(SDL_Renderer* renderer, int shearFaktor=0);
 	~clMapFileReader();
 	int getMapWidth() { return m_MapSizeWidth; };

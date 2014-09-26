@@ -13,6 +13,8 @@
 //- 255/252 = 1.0119047619
 #define RGB565_TO_RGB888_FAKTOR 1.012
 
+
+//-------------------------------------//
 clGFXFile::clGFXFile(const char * fileName)
 {
 	for (int i = 0; i < enum_GFX_Type::GFX_Type____COUNT; i++)
@@ -26,17 +28,46 @@ clGFXFile::clGFXFile(const char * fileName)
 
 
 
+//-------------------------------------//
+void clGFXFile::cleanUp()
+{
+	//- read index Image-Object-Index-Table Header
+	for (int i = 0; i < enum_GFX_Type::GFX_Type____COUNT; i++)
+	{
+		if (m_gfxObjects[i].objects != NULL)
+		{
+			int count = m_gfxObjects[i].count;
+
+			//- delete sequenzes
+			for (int j = 0; j < count; j++)
+			{
+				if (m_gfxObjects[i].objects[j].imgOffset != NULL)
+				{
+					delete (m_gfxObjects[i].objects[j].imgOffset);
+					m_gfxObjects[i].objects[j].imgCount = 0;
+					m_gfxObjects[i].objects[j].imgOffset = NULL;
+				}
+			}
+
+			//- delete object
+			delete(m_gfxObjects[i].objects);
+			m_gfxObjects[i].objects = NULL;
+		}
+	}
+}
+
+
+
+//-------------------------------------//
 bool clGFXFile::openGFXFile(const char * fileName)
 {
 	m_filename = fileName;
 	m_F.readFromFile(clConfig::getPath(clConfig::CONFIG_GFX_Path), fileName);
 	m_FR = m_F.getFileReader();
 
-	for (int i = 0; i < enum_GFX_Type::GFX_Type____COUNT; i++)
-	{
-		m_gfxObjects[i].objects = NULL;
-		m_gfxObjects[i].count = 0;
-	}
+	//- clear buffer
+	cleanUp();
+
 
 	if (!m_FR->eof())
 	{
@@ -289,7 +320,7 @@ bool clGFXFile::getTextureLandscape(GFX_ObjectTexture *outGFXObject, SDL_Rendere
 		return NULL;
 	}
 
-	delete imgData;
+	delete[] imgData;
 
 	outGFXObject->image = newTexture;
 	outGFXObject->xRel = imgHead.xRel;
@@ -512,7 +543,7 @@ bool clGFXFile::getTextureObject(GFX_ObjectTexture *outGFXObject, SDL_Renderer* 
 				return NULL;
 			}
 
-			delete imgData;
+			delete[] imgData;
 
 			outGFXObject->image = newTexture;
 			outGFXObject->xRel = xRel;
@@ -802,29 +833,7 @@ clGFXFile::~clGFXFile()
 {
 	m_error.AddDebug("unload gfx file: %s", m_filename);
 
-	//- read index Image-Object-Index-Table Header
-	for (int i = 0; i < enum_GFX_Type::GFX_Type____COUNT; i++)
-	{
-		if (m_gfxObjects[i].objects != NULL)
-		{
-			int count = m_gfxObjects[i].count;
-
-			//- delete sequenzes
-			for (int j = 0; j < count; j++)
-			{
-				if (m_gfxObjects[i].objects[j].imgOffset != NULL)
-				{
-					delete (m_gfxObjects[i].objects[j].imgOffset);
-					m_gfxObjects[i].objects[j].imgCount = 0;
-					m_gfxObjects[i].objects[j].imgOffset = NULL;
-				}
-			}
-
-			//- delete object
-			delete(m_gfxObjects[i].objects);
-			m_gfxObjects[i].objects = NULL;
-		}
-	}
+	cleanUp();
 }
 
 
