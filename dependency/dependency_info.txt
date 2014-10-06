@@ -1,0 +1,4 @@
+you need the "glew" and the "glfw" library:
+  http://glew.sourceforge.net/
+  http://www.glfw.org/
+to run this application.
