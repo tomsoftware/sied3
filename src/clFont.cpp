@@ -1,11 +1,11 @@
 #include "clFont.h"
 
 
-clFont::clFont(SDL_Renderer * renderer)
+clFont::clFont()
 {
-	SDL_Surface * image = SDL_LoadBMP("image.bmp");
+	//SDL_Surface * image = SDL_LoadBMP("image.bmp");
 
-	imgFont = SDL_CreateTextureFromSurface(renderer, image);
+	//imgFont = SDL_CreateTextureFromSurface(renderer, image);
 
 
 

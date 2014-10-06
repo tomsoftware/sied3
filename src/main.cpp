@@ -3,39 +3,18 @@
 
 int main(int argc, char* argv[])
 {
-	if (SDL_Init(SDL_INIT_EVERYTHING) != 0){
-		m_error.AddError("SDL_Init failed", SDL_GetError());
-		return 1;
-	}
-
-	m_sdl_window = SDL_CreateWindow("Sied 3", 100, 100, 1300, 800, SDL_WINDOW_SHOWN);
-	if (m_sdl_window == nullptr)
-	{
-		m_error.AddError("SDL_CreateWindow Error", SDL_GetError());
-		SDL_Quit();
-		return 1;
-	}
+	if (!initWindow()) return -1;
 
 
-	SDL_Renderer *renderer = SDL_CreateRenderer(m_sdl_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_TARGETTEXTURE);
-	if (renderer == nullptr){
-		SDL_DestroyWindow(m_sdl_window);
-		m_error.AddError("SDL_CreateRenderer Error", SDL_GetError());
-		SDL_Quit();
-		return 1;
-	}
+	//loadMap("texture.map", clMapFileReader::enum_map_folders::FOLDER_USER);
+	loadMap("448_DEMO.map", clMapFileReader::enum_map_folders::FOLDER_USER);
+	//loadMap( "flach.map", clMapFileReader::enum_map_folders::FOLDER_USER);
+	loadResource();
+
+	gameLoop();
 
 
-	
-	//loadMap(renderer, "texture.map", clMapFileReader::enum_map_folders::FOLDER_USER);
-	//loadMap(renderer, "448_DEMO.map", clMapFileReader::enum_map_folders::FOLDER_USER);
-	loadMap(renderer, "flach.map", clMapFileReader::enum_map_folders::FOLDER_USER);
-	loadResource(renderer);
-	gameLoop(renderer);
-
-	SDL_DestroyRenderer(renderer);
-	SDL_DestroyWindow(m_sdl_window);
-	SDL_Quit();
+	unloadWindow();
 
 
 	m_error.AddError("Terminate");
@@ -46,17 +25,91 @@ int main(int argc, char* argv[])
 
 
 //-------------------------------------//
+void unloadWindow()
+{
+	glfwDestroyWindow(m_window);
+
+	m_window = NULL;
+
+	glfwTerminate();
+}
+
+
+//-------------------------------------//
+bool initWindow()
+{
+	glfwSetErrorCallback(error_callback);
+
+	if (!glfwInit())
+	{
+		m_error.AddError("Error initWindow:glfwInit()");
+		return false;
+	}
+
+
+	m_window = glfwCreateWindow(1024, 640, "Sied3", NULL, NULL);
+	if (!m_window)
+	{
+		m_error.AddError("glfwCreateWindow() Failed.");
+		glfwTerminate();
+		return false;
+	}
+
+	glfwMakeContextCurrent(m_window);
+
+	//- Registrate Callbacks
+	glfwSetKeyCallback(m_window, key_callback);
+
+	glfwSetMouseButtonCallback(m_window, mouse_click_callback);
+
+	glfwSetCursorPosCallback(m_window, mouse_move_callback);
+	return true;
+
+}
+
+//-------------------------------------//
+void setUpCam()
+{
+	float ratio;
+	int width = 0;
+	int height = 0;
+
+	glfwGetFramebufferSize(m_window, &width, &height);
+
+	ratio = width / (float) height;
+
+	/*
+	glViewport(0, 0, width, height);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(-ratio, ratio, -1.f, 1.f, 1.f, -1.f);
+	*/
+
+	glViewport(0, 0, width, height);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0.f, width, 0.f, height, 1.f, -1.f);
+}
+
+
+
+
+//-------------------------------------//
 bool eventHandler()
 {
-	SDL_Event event; // event handler
+	//glfwPollEvents();
 
-	if (SDL_PollEvent(&event))
-	{
-		if (event.type == SDL_QUIT)
-		{
-			return false;
-		}
+	//if (glfwWindowShouldClose(m_window)) return false;
 
+	//if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) return false;
+
+
+
+	/*
 
 		if (event.type == SDL_MOUSEMOTION)
 		{
@@ -110,6 +163,7 @@ bool eventHandler()
 			}
 		}
 	}
+	*/
 
 	return true;
 }
@@ -118,30 +172,35 @@ bool eventHandler()
 
 
 //-------------------------------------//
-void gameLoop(SDL_Renderer *renderer)
+void gameLoop()
 {
 	bool gameRunning = true;
 	
 	
-
 	int m_GameLoopCounter=0;
 	int scale = 1;
 	int x0 = 200;
 	int y0 = 150;
 
+
+
+
 	while (gameRunning)
 	{
 		gameRunning = eventHandler();
 
+		//- set up View Point
+		setUpCam();
+
+
 		//- clean Output
-		SDL_RenderClear(renderer);
 
 		//- draw Map
-		drawMap(renderer, m_mapPosX, m_mapPosY);
-		drawMapObjects(renderer, m_mapPosX, m_mapPosY);
+		drawMap(m_mapPosX, m_mapPosY);
+		drawMapObjects(m_mapPosX, m_mapPosY);
 
 
-
+		/*
 		//////////////////////
 		//- <Preview>
 		SDL_Rect destPosMapPreview = { 1000, 50, 315, 209 };
@@ -222,17 +281,21 @@ void gameLoop(SDL_Renderer *renderer)
 			drawObject(renderer, &animWizzard.texture[animFrame], &animWizzard.torso[animFrame], x, y, scale);
 		}
 
-		
+		*/
 
-		SDL_RenderPresent(renderer);
+		//glfwSwapBuffers(m_window);
+		glfwSwapBuffers(m_window);
+		glfwPollEvents();
+
+
 
 		m_GameLoopCounter++;
-		SDL_Delay(1000/25);
+		//sleep(1000);
 	}
 }
-
+/*
 //-------------------------------------//
-void drawObject(SDL_Renderer *renderer, clGFXFile::GFX_ObjectTexture *texture, clGFXFile::GFX_ObjectSurface *torso, int x, int y, int scale)
+void drawObject(clGFXFile::GFX_ObjectTexture *texture, clGFXFile::GFX_ObjectSurface *torso, int x, int y, int scale)
 {
 	if (texture->image != NULL)
 	{
@@ -250,112 +313,226 @@ void drawObject(SDL_Renderer *renderer, clGFXFile::GFX_ObjectTexture *texture, c
 		SDL_DestroyTexture(tmpTex);
 	}
 }
+*/
 
 
 //-------------------------------------//
-void drawMap(SDL_Renderer *renderer, int posX, int posY)
+void drawMap(int posX, int posY)
 {
-	if (m_map_AraeHeightObject != NULL)
+	float textOffsetX1 = 0.f;
+	float textOffsetY1 = 0.f;
+	float textOffsetX2 = 0.f;
+	float textOffsetY2 = 0.f;
+	int outX = 0;
+	int outY = 0;
+	int curArea = -1; //- avoid switching textures if not necessary
+
+	//- setup OpenGL
+	glMatrixMode(GL_MODELVIEW);
+	glEnable(GL_TEXTURE_2D);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glLoadIdentity();
+
+
+
+	//- the heigh of one line
+	static const int YSTEP = (16 * 9 / 8) / 2;
+
+	for (int y = 0; y < 68; y++)
 	{
+		outX = (y % 2) * 8;
+		int sumY = posY + y;
 
-		for (int curY = 0; curY < 50; curY++)
+		if ((sumY<m_mapHeight) && (sumY>=0))
 		{
-			int sumY = curY + posY;
+			unsigned int * pRowData = m_map_AraeHeightObject + (m_mapHeight - sumY)*m_mapWidth;
 
-			if ((sumY >= 0) && (sumY < m_mapHeight/2))
+			for (int x = 0; x < 60; x++)
 			{
-				for (int x = 0; x < 70; x++)
+				int sumX = posX + x - y/2;
+
+				if ((sumX < m_mapWidth) && (sumX >= 0))
 				{
-					int curX = x + curY ;
-					int sumX = curX + posX - 20;
-					unsigned int * pRowData = m_map_AraeHeightObject + sumY*(m_mapWidth + m_mapHeight);
+					int v = *(pRowData + sumX);
 
-					if ((sumX >= 0) && (sumX < m_mapWidth))
+					int area = (v >> 8) & 0xFF;
+
+					//if (area == m_marker) area = 1;
+					if ((area == m_marker) || (txLandscape[area].texture != NULL))
 					{
-						int v = *(pRowData + sumX);
 
-						int area = (v >> 8) & 0xFF;
-						
-						int outX = curX * 16 - curY * 16;
-						int outY = curY * 16 * 9 / 8;
-
-						SDL_Rect posOut = { outX, outY, 16, 16 * 9 / 8 };
-						SDL_Rect posIn;
-
-						if (txLandscape[area].width == 128)
+						if (curArea != area)
 						{
-							//- Y: after 4 Blocks in y-direction, X increased by 128/2
-							posIn = { ((sumX - sumY % 8 + ((sumY / 4) % 2) * 4) % 8) * 16, (sumY % 8) * 16, 16, 16 };
-						}
-						else
-						{
-							posIn = { 0, 0, 16, 16 };
+							glBindTexture(GL_TEXTURE_2D, txLandscape[area].texture);
+							curArea = area;
 						}
 
-						SDL_RenderCopy(renderer, txLandscape[area].image, &posIn, &posOut);
+						glBegin(GL_TRIANGLES);
+
+						//--      1 --- 4  ^
+						//--     / \ B /   |
+						//--    / A \ /    |YSTEP
+						//--   2 --- 3     v
+
+						switch (txLandscape[area].textType)
+						{
+							case clOpenGLTexturesHelper::TEXTURE_TYPE_PLANE:
+								//- X: after 4 Lines in y-direction, X increases by 128/2
+								textOffsetX1 = ((sumX + ((sumY / 4) % 2) * 4) % 8) * 16.f / 128.f + (sumY % 8)* 8.f / 128.f;
+								textOffsetY1 = 16.f / 128.f * (sumY % 8);
+
+								textOffsetX2 = textOffsetX1 + 8.f / 128.f;
+								textOffsetY2 = textOffsetY1;
+								break;
+
+							case clOpenGLTexturesHelper::TEXTURE_TYPE_2x2_HEXAGON:
+								textOffsetX1 = 0.5f;
+								textOffsetY1 = 0.f;
+								textOffsetX2 = 0.5f;
+								textOffsetY2 = 0.5f;
+								break;
+						}
+
+						////// A /////
+						//-- ->1
+						glTexCoord2f(textOffsetX1 + 8.f / 128.f, textOffsetY1 + 16.f / 128.f);
+						glVertex3f(outX + 8, outY + YSTEP, 0.f);
+
+						//-- ->2
+						glTexCoord2f(textOffsetX1, textOffsetY1);
+						glVertex3f(outX, outY, 0.f);
+
+						//-- ->3
+						glTexCoord2f(textOffsetX1 + 16.f / 128.f, textOffsetY1);
+						glVertex3f(outX + 16, outY, 0.f);
+
+						////// B /////
+						//-- ->1
+						glTexCoord2f(textOffsetX2, textOffsetY2 + 16.f / 128.f);
+						glVertex3f(outX + 8, outY + YSTEP, 0.f);
+
+						//-- ->3
+						glTexCoord2f(textOffsetX2 + 8.f / 128.f, textOffsetY2);
+						glVertex3f(outX + 16, outY, 0.f);
+
+						//-- ->4
+						glTexCoord2f(textOffsetX2 + 16.f / 128.f, textOffsetY2 + 16.f / 128.f);
+						glVertex3f(outX + 8 + 16, outY + YSTEP, 0.f);
+
+						glEnd();
 
 					}
 				}
+				outX += 16;
 			}
 		}
-
+		outY += YSTEP;
 	}
+
+
+	glDisable(GL_TEXTURE_2D);
+
 }
 
 
+
+
 //-------------------------------------//
-void drawMapObjects(SDL_Renderer *renderer, int posX, int posY)
+void drawMapObjects(int posX, int posY)
 {
-	if (m_map_AraeHeightObject != NULL)
+
+	glMatrixMode(GL_MODELVIEW);
+	glEnable(GL_TEXTURE_2D);
+	glLoadIdentity();
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
+	static const int YSTEP = (16 * 9 / 8) / 2;
+	int outX = 0;
+	int outY = YSTEP * 68;
+
+	
+
+	for (int y = 68; y > 0; y--)
 	{
+		outX = (y % 2) * 8;
+		int sumY = posY + y;
 
-		for (int curY = 0; curY < 50; curY++)
+		if ((sumY<m_mapHeight) && (sumY >= 0))
 		{
-			int sumY = curY + posY;
+			unsigned int * pRowData = m_map_AraeHeightObject + (m_mapHeight - sumY)*m_mapWidth;
 
-			if ((sumY >= 0) && (sumY < m_mapHeight / 2))
+			for (int x = 0; x < 60; x++)
 			{
-				for (int x = 0; x < 70; x++)
+				int sumX = posX + x - y / 2;
+
+				if ((sumX < m_mapWidth) && (sumX >= 0))
 				{
-					int curX = x + curY;
-					int sumX = curX + posX - 20;
-					unsigned int * pRowData = m_map_AraeHeightObject + sumY*(m_mapWidth + m_mapHeight);
+					int v = *(pRowData + sumX);
 
-					if ((sumX > 0) && (sumX < (m_mapWidth)))
+					int obj = (v >> 16) & 0xFF;
+
+					if ((obj != 0) && (txObjects[obj].texture != NULL))
 					{
-						int v = (*(pRowData + sumX)) & 0xFF0000;
 
-						if (v != 0)
-						{
-							int obj = (v >> 16);
+						//--   1 --- 4
+						//--   |     |
+						//--   |     |
+						//--   2 --- 3
 
-							if (txObjects[obj].image != NULL)
-							{
-								int outX = curX * 16 - curY * 16;
-								int outY = curY * 16 * 9 / 8;
-
-								SDL_Rect posOut = { outX, outY, txObjects[obj].width, txObjects[obj].height };
+						glBindTexture(GL_TEXTURE_2D, txObjects[obj].texture);
+						glBegin(GL_QUADS);
 
 
-								SDL_RenderCopy(renderer, txObjects[obj].image, NULL, &posOut);
-							}
-							else
-							{
-								m_error.AddDebug("obj=%i", obj);
-							}
+						int curX = txObjects[obj].xRel + outX;
+						int curY = txObjects[obj].yRel + outY + txObjects[obj].height;
+						int curW = txObjects[obj].width;
+						int curH = txObjects[obj].height;
 
-						}
+						////// A /////
+						//-- ->1
+						glTexCoord2f(0,0);
+						glVertex2f(curX, curY + curH);
+
+						//-- ->2
+						glTexCoord2f(0, 1);
+						glVertex2f(curX, curY);
+
+						//-- ->3
+						glTexCoord2f(1, 1);
+						glVertex2f(curX + curW, curY);
+
+						//-- ->4
+						glTexCoord2f(1, 0);
+						glVertex2f(curX + curW, curY + curH);
+
+
+						glEnd();
+
+
 					}
 				}
+				outX += 16;
 			}
 		}
-
+		outY -= YSTEP;
 	}
+
+
+	glEnd();
+
+	glDisable(GL_TEXTURE_2D);
 }
 
 
+
+
 //-------------------------------------//
-void loadMap(SDL_Renderer *renderer, const char * fileName, clMapFileReader::enum_map_folders  mapType)
+void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 {
 	clMapFileReader map;
 
@@ -368,7 +545,7 @@ void loadMap(SDL_Renderer *renderer, const char * fileName, clMapFileReader::enu
 	m_error.AddDebug("Map size w:%i h:%i", m_mapWidth, m_mapHeight);
 
 	//- load Preview Image 
-	mapPreview = map.getPreviewImage(renderer, 2);
+	//mapPreview = map.getPreviewImage(2);
 
 
 	//- destroy old map buffer
@@ -400,25 +577,37 @@ void loadMap(SDL_Renderer *renderer, const char * fileName, clMapFileReader::enu
 
 
 
-//-------------------------------------//
-void loadResource(SDL_Renderer *renderer)
-{
 
+//-------------------------------------//
+void loadResource()
+{
 
 	//- Landscape
 	clGFXFile gfxLand = clGFXFile("Siedler3_00.f8007e01f.dat");
 
 	int count = gfxLand.getTextureLandscapeCount();
 
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[7], &gfxLand, 10); //- see [OK]
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[16], &gfxLand, 0); //- grass [OK]
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[32], &gfxLand, 21); //- rock [OK]
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[48], &gfxLand, 31); //- beach [OK]
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[64], &gfxLand, 18); //- desert [OK]
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[80], &gfxLand, 7); //- swamp [OK]
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[128], &gfxLand, 24); //- Polar [OK]
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[144], &gfxLand, 4); //- mud [OK]
 
-	gfxLand.getTextureLandscape(&txLandscape[7], renderer, 10); //- Meer [OK]
-	gfxLand.getTextureLandscape(&txLandscape[16], renderer, 0); //- Gras [OK]
-	gfxLand.getTextureLandscape(&txLandscape[32], renderer, 21); //- Fels[OK]
-	gfxLand.getTextureLandscape(&txLandscape[48], renderer, 31); //- Strand[OK]
-	gfxLand.getTextureLandscape(&txLandscape[64], renderer, 18); //- Wüste [OK]
-	gfxLand.getTextureLandscape(&txLandscape[80], renderer, 7); //- Sumpf [OK]
-	gfxLand.getTextureLandscape(&txLandscape[128], renderer, 24); //- Eis [OK]
-	gfxLand.getTextureLandscape(&txLandscape[144], renderer, 4); //- Schlamm / Totes land [OK]
+	//- between the different map-textures a blending is created. 
+	//-  for this blending the outer-part of the feld (e.g. grass=0 -> 128) is changed PLUS two map-rows (20,65) and then the outer-part of the dessert
+	//-  to make the blend more cloudy the are always two images for the same purpose (e.g. {128 | 129})
+	//- for 16-->64: [ {0}, {128 | 129} , {130 | 131}, {132 | 133} , {134 | 135}, {136 | 137} ,  {138 | 139}, {18}   <--- texture-file-index
+	//--             |      16          |           20             |             65           |         64           <--- map-type-index
+	//--                   grass                                                                      desert         <---  "name"
+	//-
+	//-- to improve handling of the blending and the variation of textures, the textures for one map-type-index are copyed side by side in one texture:
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[20], &gfxLand, 130, 131, 132, 133, 16, 65); //- 128 129 130 131
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[65], &gfxLand, 134, 135, 136, 137, 20, 64); //- 128 129 130 131
+	
+
 	//gfxLand.getTextureLandscape(&txLandscape[20], renderer, 20);
 	//gfxLand.getTextureLandscape(&txLandscape[65], renderer, 19);
 	//gfxLand.getTextureLandscape(&txLandscape[17], renderer, 22); //24,23
@@ -427,11 +616,14 @@ void loadResource(SDL_Renderer *renderer)
 	//gfxLand.getTextureLandscape(&txLandscape[35], renderer, 165);
 	//gfxLand.getTextureLandscape(&txLandscape[129], renderer, 166);
 
+
 	//- Objects
 	clGFXFile gfxObjects = clGFXFile("Siedler3_01.f8007e01f.dat");
 
-	clGameObjects::load_game_objects(renderer, gfxObjects, txObjects);
+	clOpenGLTexturesHelper::load_game_objects(gfxObjects, txObjects);
 
+
+	/*
 	//clGameObjects::load_game_buildings_roman(renderer, gfxObjects, txBuildings);
 
 
@@ -480,4 +672,126 @@ void loadResource(SDL_Renderer *renderer)
 		gfxSied11.getTextureObject(&animWizzard.texture[i], renderer, 172, 172, i);
 		gfxSied11.getTextureTorso(&animWizzard.torso[i], renderer, 159, i);
 	}
+	
+	*/
 }
+
+
+
+//=============================================================================
+// CALLBACKS
+//=============================================================================
+
+//-------------------------------------//
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (action == GLFW_PRESS)
+	{
+
+		switch (key)
+		{
+			case GLFW_KEY_ESCAPE: // ESCAPE
+				exit(0);
+				break;
+			case GLFW_KEY_KP_ADD:
+				m_marker++;
+				m_error.AddDebug("Marker: %i", m_marker);
+				break;
+			case GLFW_KEY_KP_SUBTRACT:
+				m_marker--;
+				m_error.AddDebug("Marker: %i", m_marker);
+				break;
+			case 'd': // switch rendering modes (fill -> wire -> point)
+			case 'D':
+				drawMode = ++drawMode % 3;
+				if (drawMode == 0)        // fill mode
+				{
+					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+					//glEnable(GL_DEPTH_TEST);
+					glEnable(GL_CULL_FACE);
+				}
+				else if (drawMode == 1)  // wireframe mode
+				{
+					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+					//glDisable(GL_DEPTH_TEST);
+					glDisable(GL_CULL_FACE);
+				}
+				else                    // point mode
+				{
+					glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+					//glDisable(GL_DEPTH_TEST);
+					glDisable(GL_CULL_FACE);
+				}
+				break;
+		}
+	}
+}
+
+//-------------------------------------//
+void mouse_click_callback(GLFWwindow *window, int button, int action, int mods)
+{
+	double mouseX = 0;
+	double mouseY = 0;
+
+	glfwGetCursorPos(window, &mouseX, &mouseY);
+	
+
+	if (button == GLFW_MOUSE_BUTTON_LEFT)
+	{
+		if (action == GLFW_PRESS)
+		{
+			m_MouseDownStartX = mouseX - m_mapPosX;
+			m_MouseDownStartY = m_mapPosY - m_mapHeight + mouseY;
+
+			mouseLeftDown = true;
+		}
+		else if (action == GLFW_RELEASE)
+			mouseLeftDown = false;
+	}
+
+	else if (button == GLFW_MOUSE_BUTTON_RIGHT)
+	{
+		if (action == GLFW_PRESS)
+		{
+			mouseRightDown = true;
+		}
+		else if (action == GLFW_RELEASE)
+			mouseRightDown = false;
+	}
+
+	else if (button == GLFW_MOUSE_BUTTON_MIDDLE)
+	{
+		if (action == GLFW_PRESS)
+		{
+			mouseMiddleDown = true;
+		}
+		else if (action == GLFW_RELEASE)
+			mouseMiddleDown = false;
+	}
+}
+
+//-------------------------------------//
+void mouse_move_callback(GLFWwindow *window, double xpos, double ypos)
+{
+	if (mouseLeftDown)
+	{
+		m_mapPosX = xpos - m_MouseDownStartX;
+		m_mapPosY = m_mapHeight - (ypos - m_MouseDownStartY);
+
+
+		if (m_mapPosX < 0) m_mapPosX = 0;
+		if (m_mapPosY < 0) m_mapPosY = 0;
+
+		if (m_mapPosX> m_mapWidth) m_mapPosX = m_mapWidth;
+		if (m_mapPosY> m_mapHeight) m_mapPosY = m_mapHeight;
+	}
+}
+
+//-------------------------------------//
+static void error_callback(int error, const char* description)
+{
+	m_error.AddError("GLFW: [%i] %s", error, description);
+	fputs(description, stderr);
+}
+
+

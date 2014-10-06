@@ -274,8 +274,9 @@ bool clGFXFile::getAnimationInfo(GFX_ObjectAnimationFrame * outGFXObject, int id
 
 
 //-------------------------------------//
-bool clGFXFile::getTextureLandscape(GFX_ObjectTexture *outGFXObject, SDL_Renderer* renderer, int id)
+bool clGFXFile::getTextureLandscape(GFXFILE_TextureObject *outGFXObject, int id)
 {
+
 	ty_gfxObjects * gfxOb = &m_gfxObjects[enum_GFX_Type::GFX_Type_Landscape];
 
 	if ((id < 0) || (id >= gfxOb->count))
@@ -284,7 +285,7 @@ bool clGFXFile::getTextureLandscape(GFX_ObjectTexture *outGFXObject, SDL_Rendere
 		outGFXObject->yRel = 0;
 		outGFXObject->height = 0;
 		outGFXObject->width = 0;
-		outGFXObject->image = NULL;
+		outGFXObject->imageRGBA = NULL;
 
 		m_error.AddError("(getTextureLandscape) Texture ID (%i) not found", id);
 
@@ -299,47 +300,27 @@ bool clGFXFile::getTextureLandscape(GFX_ObjectTexture *outGFXObject, SDL_Rendere
 	readImageHeader(&imgHead, gfxOb->objects[id].HaedOffset);
 
 
-	SDL_Texture* newTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, imgHead.width, imgHead.height);
-	if (newTexture == 0)
-	{
-		m_error.AddError("(getTextureLandscape) SDL_CreateTexture error: %s", SDL_GetError());
-		return NULL;
-	}
-
 	//- get buffer for new pixel data
-	int *imgData = new int[imgHead.width * imgHead.height];
+	unsigned int *imgData = new unsigned int[imgHead.width * imgHead.height];
 
 	//- read Pixel Data of Image
 	readImageData(imgData, imgHead.fileOffset, imgHead.width, imgHead.height, 0, 0, imgHead.width);
 
-	//- update Texture
-	if (SDL_UpdateTexture(newTexture, NULL, imgData, imgHead.width*sizeof(int)) != 0)
-	{
-		delete imgData;
-		m_error.AddError("(getTextureLandscape) SDL_UpdateTexture error: %s", SDL_GetError());
-		return NULL;
-	}
 
-	delete[] imgData;
-
-	outGFXObject->image = newTexture;
+	outGFXObject->imageRGBA = imgData;
 	outGFXObject->xRel = imgHead.xRel;
 	outGFXObject->yRel = imgHead.yRel;
 	outGFXObject->height = imgHead.height;
 	outGFXObject->width = imgHead.width;
+
 	return true;
-
-
-
-
-
-
 }
 
 
 
+/*
 //-------------------------------------//
-bool clGFXFile::getTextureTorso(GFX_ObjectSurface *outGFXObject, SDL_Renderer* renderer, int id, int frame)
+bool clGFXFile::getTextureTorso(GFXFILE_TextureObject *outGFXObject, SDL_Renderer* renderer, int id, int frame)
 {
 	ty_gfxObjects * gfxOb = &m_gfxObjects[enum_GFX_Type::GFX_Type_Torso];
 
@@ -390,17 +371,12 @@ bool clGFXFile::getTextureTorso(GFX_ObjectSurface *outGFXObject, SDL_Renderer* r
 		m_error.AddError("(getTextureTorso) Texture ID (%i) not found", id);
 	}
 
-	/*
-	outGFXObject->xRel = 0;
-	outGFXObject->yRel = 0;
-	outGFXObject->height = 0;
-	outGFXObject->width = 0;
-	outGFXObject->image = NULL;
-	*/
+	
 	return false;
 }
+*/
 
-
+/*
 //-------------------------------------//
 SDL_Palette* clGFXFile::getPalette(int paletteId, int colorVariationIndex)
 {
@@ -463,118 +439,97 @@ SDL_Palette* clGFXFile::getPalette(int paletteId, int colorVariationIndex)
 
 	return NULL;
 }
+*/
 
 //-------------------------------------//
-void clGFXFile::delete_GFX_Object(GFX_ObjectSurface *outGFXObject)
+void clGFXFile::unload_GFX_Object(GFXFILE_TextureObject *outGFXObject)
 {
-	if (outGFXObject->image != NULL)
+	if (outGFXObject->imageRGBA != NULL)
 	{
-		SDL_FreeSurface(outGFXObject->image);
-		outGFXObject->image = NULL;
+		delete [] outGFXObject->imageRGBA;
+		outGFXObject->imageRGBA = NULL;
 		outGFXObject->width = 0;
 		outGFXObject->height = 0;
 	}
 }
 
+
+
 //-------------------------------------//
-void clGFXFile::delete_GFX_Object(GFX_ObjectTexture *outGFXObject)
-{
-	if (outGFXObject->image != NULL)
-	{
-		SDL_DestroyTexture(outGFXObject->image);
-		outGFXObject->image = NULL;
-		outGFXObject->width = 0;
-		outGFXObject->height = 0;
-	}
-}
-//-------------------------------------//
-bool clGFXFile::getTextureObject(GFX_ObjectTexture *outGFXObject, SDL_Renderer* renderer, int sequenzeId, int shadowId, int frame)
+bool clGFXFile::getTextureObject(GFXFILE_TextureObject *outGFXObject, int sequenzeId, int shadowId, int frame)
 {
 	ty_gfxObjects * gfxOb = &m_gfxObjects[enum_GFX_Type::GFX_Type_Object];
 	ty_gfxObjects * gfxObShadow = &m_gfxObjects[enum_GFX_Type::GFX_Type_Shadow];
 
-	if ((sequenzeId >= 0) && (sequenzeId< gfxOb->count) && (shadowId >= 0) && (shadowId<gfxObShadow->count))
+
+	if ((sequenzeId < 0) && (sequenzeId >= gfxOb->count) && (shadowId < 0) && (shadowId >= gfxObShadow->count))
 	{
-		if ((frame >= 0) && (frame < gfxOb->objects[sequenzeId].imgCount) && (frame < gfxObShadow->objects[shadowId].imgCount))
-		{
-			ty_ImageHead imgHead;
-			ty_ImageHead imgHeadShadow;
+		outGFXObject->xRel = 0;
+		outGFXObject->yRel = 0;
+		outGFXObject->height = 0;
+		outGFXObject->width = 0;
+		outGFXObject->imageRGBA = NULL;
 
-			//- read Haeder of Image
-			readImageHeader(&imgHead, gfxOb->objects[sequenzeId].imgOffset[frame], true, true);
+		m_error.AddError("(getTextureObject) Texture ID (%i) not found", sequenzeId);
 
-			//- read Haeder of Shadow
-			readImageHeader(&imgHeadShadow, gfxObShadow->objects[shadowId].imgOffset[frame], true, true);
+		return false;
+	}
+
+
+	if ((frame >= 0) && (frame < gfxOb->objects[sequenzeId].imgCount) && (frame < gfxObShadow->objects[shadowId].imgCount))
+	{
+		ty_ImageHead imgHead;
+		ty_ImageHead imgHeadShadow;
+
+		//- read Haeder of Image
+		readImageHeader(&imgHead, gfxOb->objects[sequenzeId].imgOffset[frame], true, true);
+
+		//- read Haeder of Shadow
+		readImageHeader(&imgHeadShadow, gfxObShadow->objects[shadowId].imgOffset[frame], true, true);
 			
-			//- calc bounding box for Image + Shadow
-			int xRel = min(imgHead.xRel, imgHeadShadow.xRel);
-			int yRel = min(imgHead.yRel, imgHeadShadow.yRel);
-			int width = max((imgHead.width + imgHead.xRel), (imgHeadShadow.width + imgHeadShadow.xRel)) - xRel;
-			int height = max((imgHead.height + imgHead.yRel), (imgHeadShadow.height + imgHeadShadow.yRel)) - yRel;
+		//- calc bounding box for Image + Shadow
+		int xRel = min(imgHead.xRel, imgHeadShadow.xRel);
+		int yRel = min(imgHead.yRel, imgHeadShadow.yRel);
+		int width = max((imgHead.width + imgHead.xRel), (imgHeadShadow.width + imgHeadShadow.xRel)) - xRel;
+		int height = max((imgHead.height + imgHead.yRel), (imgHeadShadow.height + imgHeadShadow.yRel)) - yRel;
 
 
-			SDL_Texture* newTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, width, height);
-			if (newTexture == 0)
-			{
-				m_error.AddError("(getTextureObject) SDL_CreateTexture error: %s", SDL_GetError());
-				return NULL;
-			}
 
-			SDL_SetTextureBlendMode(newTexture, SDL_BLENDMODE_BLEND);
+		//- create buffer for new pixel data
+		unsigned int *imgData = new unsigned int[width * height];
 
-			//- create buffer for new pixel data
-			int *imgData = new int[width * height];
+		//- clear Buffer
+		readImageDataClear(imgData, width, height);
 
-			//- clear Buffer
-			readImageDataClear(imgData, width, height);
+		//- read Pixel Data of Shadow
+		readShadowData(imgData, imgHeadShadow.fileOffset, imgHeadShadow.width, imgHeadShadow.height, imgHeadShadow.xRel - xRel, imgHeadShadow.yRel - yRel, width);
 
-			//- read Pixel Data of Shadow
-			readShadowData(imgData, imgHeadShadow.fileOffset, imgHeadShadow.width, imgHeadShadow.height, imgHeadShadow.xRel - xRel, imgHeadShadow.yRel - yRel, width);
-
-			//- read Pixel Data of Image
-			readImageData(imgData, imgHead.fileOffset, imgHead.width, imgHead.height, imgHead.xRel - xRel, imgHead.yRel - yRel, width);
+		//- read Pixel Data of Image
+		readImageData(imgData, imgHead.fileOffset, imgHead.width, imgHead.height, imgHead.xRel - xRel, imgHead.yRel - yRel, width);
 
 
-			//- update Texture
-			if (SDL_UpdateTexture(newTexture, NULL, imgData, width * sizeof(int)) != 0)
-			{
-				delete imgData;
-				m_error.AddError("(getTextureObject) SDL_UpdateTexture error: %s", SDL_GetError());
-				return NULL;
-			}
 
-			delete[] imgData;
-
-			outGFXObject->image = newTexture;
-			outGFXObject->xRel = xRel;
-			outGFXObject->yRel = yRel;
-			outGFXObject->height = height;
-			outGFXObject->width = width;
-			return true;
-		}
-		else
-		{
-			m_error.AddError("(getTextureObject) Frame (%i) of Texture-ID (%i) not found", frame, sequenzeId);
-		}
+		outGFXObject->imageRGBA = imgData;
+		outGFXObject->xRel = xRel;
+		outGFXObject->yRel = yRel;
+		outGFXObject->height = height;
+		outGFXObject->width = width;
+		return true;
 	}
 	else
 	{
-		m_error.AddError("(getTextureObject) Texture ID (%i) not found", sequenzeId);
+		m_error.AddError("(getTextureObject) Frame (%i) of Texture-ID (%i) not found", frame, sequenzeId);
 	}
 
-	/*
-	outGFXObject->xRel = 0;
-	outGFXObject->yRel = 0;
-	outGFXObject->height = 0;
-	outGFXObject->width = 0;
-	outGFXObject->image = NULL;
-	*/
+
+
 	return false;
 }
 
 
+
 //-------------------------------------//
-bool clGFXFile::readImageData(int * outImgData, int fileOffset, int width, int height, int x0, int y0, int outImgWidth)
+bool clGFXFile::readImageData(unsigned int * outImgData, int fileOffset, int width, int height, int x0, int y0, int outImgWidth)
 {
 	if (outImgData == NULL) return false;
 
@@ -582,8 +537,8 @@ bool clGFXFile::readImageData(int * outImgData, int fileOffset, int width, int h
 
 	int y = 0;
 	int x = 0; //- only for debuging!
-	int * pOutStart = outImgData + y0*outImgWidth;
-	int * pOut = pOutStart + x0;
+	unsigned int * pOutStart = outImgData + y0*outImgWidth;
+	unsigned int * pOut = pOutStart + x0;
 
 
 	while (y < height)
@@ -646,7 +601,7 @@ bool clGFXFile::readImageData(int * outImgData, int fileOffset, int width, int h
 
 
 //-------------------------------------//
-bool clGFXFile::readImageDataClear(int * outImgData, int width, int height)
+bool clGFXFile::readImageDataClear(unsigned int * outImgData, int width, int height)
 {
 	if (outImgData == NULL) return false;
 
@@ -663,7 +618,7 @@ bool clGFXFile::readImageDataClear(int * outImgData, int width, int height)
 
 
 //-------------------------------------//
-bool clGFXFile::readShadowData(int * outImgData, int fileOffset, int width, int height, int x0, int y0, int outImgWidth, bool doEdgeBlure)
+bool clGFXFile::readShadowData(unsigned int * outImgData, int fileOffset, int width, int height, int x0, int y0, int outImgWidth, bool doEdgeBlure)
 {
 	if (outImgData == NULL) return false;
 
@@ -671,8 +626,8 @@ bool clGFXFile::readShadowData(int * outImgData, int fileOffset, int width, int 
 
 	int y = 0;
 	int x = 0; //- only for debuging!
-	int * pOutStart = outImgData + y0*outImgWidth;
-	int * pOut = pOutStart + x0;
+	unsigned int * pOutStart = outImgData + y0*outImgWidth;
+	unsigned int * pOut = pOutStart + x0;
 
 
 	while (y < height)
@@ -731,7 +686,7 @@ bool clGFXFile::readShadowData(int * outImgData, int fileOffset, int width, int 
 	return true;
 }
 
-
+/*
 //-------------------------------------//
 bool clGFXFile::readIndexData(Uint8 * outImgData, int fileOffset, int width, int height, int x0, int y0, int outImgWidth)
 {
@@ -779,6 +734,7 @@ bool clGFXFile::readIndexData(Uint8 * outImgData, int fileOffset, int width, int
 
 	return true;
 }
+*/
 
 //-------------------------------------//
 bool clGFXFile::readImageHeader(ty_ImageHead * imgHead, int offset, bool hasMagic, bool hasRelatives, bool hasColorMode)

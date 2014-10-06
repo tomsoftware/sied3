@@ -41,8 +41,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\Entwicklung\VC\sied3\SDL\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Entwicklung\VC\sied3\SDL\lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\Entwicklung\VC\sied3\dependency;D:\Entwicklung\VC\sied3\dependency\glext\include;D:\Entwicklung\VC\sied3\dependency\glfw\include;D:\Entwicklung\VC\sied3\dependency\glew\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\Entwicklung\VC\sied3\dependency\glut;D:\Entwicklung\VC\sied3\dependency\glext\lib;D:\Entwicklung\VC\sied3\dependency\glfw\lib-msvc120;D:\Entwicklung\VC\sied3\dependency\glew\bin\Release\Win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -61,7 +61,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OpenGL32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -92,6 +92,7 @@
     <ClCompile Include="..\..\src\clGameObjects.cpp" />
     <ClCompile Include="..\..\src\clGFXFile.cpp" />
     <ClCompile Include="..\..\src\clMapFileReader.cpp" />
+    <ClCompile Include="..\..\src\clOpenGLTexturesHelper.cpp" />
     <ClCompile Include="..\..\src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -103,6 +104,7 @@
     <ClInclude Include="..\..\src\clGameObjects.h" />
     <ClInclude Include="..\..\src\clGFXFile.h" />
     <ClInclude Include="..\..\src\clMapFileReader.h" />
+    <ClInclude Include="..\..\src\clOpenGLTexturesHelper.h" />
     <ClInclude Include="..\..\src\main.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

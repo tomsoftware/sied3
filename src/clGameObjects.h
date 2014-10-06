@@ -1,13 +1,12 @@
 #ifndef CLGAMEOBJECTS_H
 #define CLGAMEOBJECTS_H
 
-#include <SDL.h>
-#include "clGFXFile.h"
 
+#include "clGFXFile.h"
 
 class clGameObjects
 {
-
+public:
 	enum enum_GAME_OBJECTS
 	{
 		GAME_OBJECT_BIG_STONE_1 = 1,
@@ -299,8 +298,6 @@ public:
 	clGameObjects();
 	~clGameObjects();
 
-	void static load_game_objects(SDL_Renderer *renderer, clGFXFile &gfxObjects, clGFXFile::GFX_ObjectTexture txObjects[255]);
-	//void static load_game_buildings_roman(SDL_Renderer *renderer, clGFXFile &gfxObjects, clGFXFile::GFX_ObjectTexture txObjects[255]);
 };
 
 

@@ -2,20 +2,25 @@
 #define MAIN_H
 
 #include <stdio.h>
-#include <SDL.h>
+#include <stdlib.h>
+
+// Include GLEW. Always include it before gl.h and glfw.h, since it's a bit magic.
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+
 #include <iostream>
 
 #include "clGFXFile.h"
 #include "clError.h"
 #include "clMapFileReader.h"
-//#include "sied3Objects.h"
 #include "clGameObjects.h"
+#include "clOpenGLTexturesHelper.h"
 
 
 struct ty_Animation
 {
-	clGFXFile::GFX_ObjectTexture *texture;
-	clGFXFile::GFX_ObjectSurface *torso;
+	clOpenGLTexturesHelper::ty_TextureObject *texture;
+	clOpenGLTexturesHelper::ty_TextureObject *torso;
 	int count;
 };
 
@@ -23,31 +28,58 @@ struct ty_Animation
 
 
 
+void toPerspective();
+void toOrtho();
+
+void initGL();
+int  initGLUT(int argc, char **argv);
+
+
+bool mouseLeftDown = false;
+bool mouseRightDown = false;
+bool mouseMiddleDown = false;
+float mouseX=0;
+float mouseY=0;
+float cameraAngleX=0;
+float cameraAngleY=0;
+float cameraDistance = 10.0f;
+int drawMode=0;// 0:fill, 1: wireframe, 2:points
+int screenWidth = 1024;
+int screenHeight = 640;
+
+
 
 int main(int argc, char* argv []);
-void gameLoop(SDL_Renderer *renderer);
-void loadResource(SDL_Renderer *renderer);
-void loadMap(SDL_Renderer *renderer, const char * fileName, clMapFileReader::enum_map_folders mapType);
-void drawMap(SDL_Renderer *renderer, int x, int y);
-void drawMapObjects(SDL_Renderer *renderer, int posX, int posY);
+void gameLoop();
+void setUpCam();
+
+bool initWindow();
+void unloadWindow();
 
 
+void loadResource();
+void loadMap( const char * fileName, clMapFileReader::enum_map_folders mapType);
+void drawMap(int x, int y);
+void drawMapObjects(int posX, int posY);
+
+bool checkForGlError(const char * errorText);
 clError m_error = clError("main");
 
-SDL_Window *m_sdl_window;
+GLFWwindow* m_window;
 
-clGFXFile::GFX_ObjectTexture txBuild;
-clGFXFile::GFX_ObjectTexture txLandscape[256];
-clGFXFile::GFX_ObjectTexture txObjects[256];
-clGFXFile::GFX_ObjectTexture txBuildings[256];
-clGFXFile::GFX_ObjectTexture txSied;
-clGFXFile::GFX_ObjectSurface txTorso;
 
-SDL_Texture * mapPreview;
+clOpenGLTexturesHelper::ty_TextureObject txBuild;
+clOpenGLTexturesHelper::ty_TextureObject txLandscape[256];
+clOpenGLTexturesHelper::ty_TextureObject txObjects[256];
+clOpenGLTexturesHelper::ty_TextureObject txBuildings[256];
+clOpenGLTexturesHelper::ty_TextureObject txSied;
+clOpenGLTexturesHelper::ty_TextureObject txTorso;
+
+//SDL_Texture * mapPreview;
 
 ty_Animation animWizzard;
 
-SDL_Palette*palTorso;
+//SDL_Palette*palTorso;
 
 int AnimationID = 382; //368;
 int BuildingID = 10;
@@ -57,18 +89,28 @@ unsigned int *m_map_AraeHeightObject = NULL;
 unsigned int *m_map_AccessiblePlayerResources = NULL;
 int m_mapWidth=0;
 int m_mapHeight=0;
-void drawObject(SDL_Renderer *renderer, clGFXFile::GFX_ObjectTexture *texture, clGFXFile::GFX_ObjectSurface *torso, int x, int y, int scale=1);
+//void drawObject(clOpenGLTexturesHelper::ty_TextureObject *texture, clOpenGLTexturesHelper::ty_TextureObject *torso, int x, int y, int scale = 1);
 
 int m_mapPosX = 0;
-int m_mapPosY = 0;
+int m_mapPosY = 220;
 int m_MouseDownStartX = 0;
 int m_MouseDownStartY = 0;
+
+int m_marker = 0;
+
 
 clGFXFile gfxSied12;
 clGFXFile gfxSied11;
 clGFXFile gfxSied10;
 clGFXFile gfxAnimation;
 clGFXFile gfxBuilding;
+
+
+
+static void error_callback(int error, const char* description);
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+static void mouse_click_callback(GLFWwindow *window, int button, int action, int mods);
+static void mouse_move_callback(GLFWwindow *window, double xpos, double ypos);
 
 
 

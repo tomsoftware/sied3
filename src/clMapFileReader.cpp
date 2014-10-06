@@ -234,7 +234,7 @@ bool clMapFileReader::readMapInfo()
 }
 
 
-
+/*
 //-------------------------------------//
 SDL_Texture * clMapFileReader::getPreviewImage(SDL_Renderer* renderer, int shearFaktor)
 {
@@ -338,7 +338,7 @@ SDL_Texture * clMapFileReader::getPreviewImage(SDL_Renderer* renderer, int shear
 	
 }
 
-
+*/
 
 
 

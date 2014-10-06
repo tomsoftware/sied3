@@ -4,29 +4,22 @@
 #include "clError.h"
 #include "clFile.h"
 #include "clConfig.h"
-#include <SDL.h>
+
 
 class clGFXFile
 {
 public:
 
-	struct GFX_ObjectTexture
+	struct GFXFILE_TextureObject
 	{
-		SDL_Texture *image=NULL;
+		unsigned int *imageRGBA=NULL;
 		int xRel=0;
 		int yRel=0;
 		int width=0;
 		int height=0;
 	};
 
-	struct GFX_ObjectSurface
-	{
-		SDL_Surface *image = NULL;
-		int xRel = 0;
-		int yRel = 0;
-		int width = 0;
-		int height = 0;
-	};
+
 
 	struct GFX_ObjectAnimationFrame
 	{
@@ -112,10 +105,10 @@ private:
 
 	bool readImageHeader(ty_ImageHead * imgHead, int offset, bool hasMagic = false, bool hasRelatives = false, bool hasColorMode=true);
 	//bool readImageData(int * outImgData, int fileOffset, int width, int height);
-	bool readImageData(int * outImgData, int fileOffset, int width, int height, int x0, int y0, int frameWidth);
-	bool readShadowData(int * outImgData, int fileOffset, int width, int height, int x0, int y0, int frameWidth, bool doEdgeBlure=true);
-	bool readImageDataClear(int * outImgData, int width, int height);
-	bool readIndexData(Uint8 * outImgData, int fileOffset, int width, int height, int x0, int y0, int outImgWidth);
+	bool readImageData(unsigned int * outImgData, int fileOffset, int width, int height, int x0, int y0, int frameWidth);
+	bool readShadowData(unsigned int * outImgData, int fileOffset, int width, int height, int x0, int y0, int frameWidth, bool doEdgeBlure = true);
+	bool readImageDataClear(unsigned int * outImgData, int width, int height);
+	bool readIndexData(unsigned char * outImgData, int fileOffset, int width, int height, int x0, int y0, int outImgWidth);
 
 	void cleanUp();
 
@@ -126,18 +119,17 @@ public:
 
 	bool openGFXFile(const char * fileName);
 
-	bool getTextureLandscape(GFX_ObjectTexture *outGFXObject, SDL_Renderer* renderer, int id);
-	bool getTextureObject(GFX_ObjectTexture *outGFXObject, SDL_Renderer* renderer, int sequenzeId, int shadowId, int frame=0);
-	bool getTextureTorso(GFX_ObjectSurface * outGFXObject, SDL_Renderer* renderer, int id, int frame);
+	bool getTextureLandscape(GFXFILE_TextureObject *outGFXObject, int id);
+	bool getTextureObject(GFXFILE_TextureObject *outGFXObject, int sequenzeId, int shadowId, int frame = 0);
+	bool getTextureTorso(GFXFILE_TextureObject * outGFXObject, int id, int frame);
 
 	int getTextureLandscapeCount();
 
 	bool getAnimationInfo(GFX_ObjectAnimationFrame * outGFXObject, int id, int frame);
 	int getAnimationInfoFrameCount(int id);
 
-	SDL_Palette* getPalette(int paletteId, int colorVariationIndex);
-	static void delete_GFX_Object(GFX_ObjectTexture *outGFXObject);
-	static void delete_GFX_Object(GFX_ObjectSurface *outGFXObject);
+	//SDL_Palette* getPalette(int paletteId, int colorVariationIndex);
+	static void unload_GFX_Object(GFXFILE_TextureObject *outGFXObject);
 	
 };
 

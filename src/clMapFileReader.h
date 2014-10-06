@@ -4,7 +4,7 @@
 #include "clError.h"
 #include "clFile.h"
 #include "clConfig.h"
-#include <SDL.h>
+
 
 class clMapFileReader
 {
@@ -109,7 +109,7 @@ public:
 	clMapFileReader(enum_map_folders map_folder=FOLDER_NONE, const char * fileName="");
 	void readMap(enum_map_folders map_folder, const char * fileName);
 
-	SDL_Texture * getPreviewImage(SDL_Renderer* renderer, int shearFaktor=0);
+	//SDL_Texture * getPreviewImage(SDL_Renderer* renderer, int shearFaktor=0);
 	~clMapFileReader();
 	int getMapWidth() { return m_MapSizeWidth; };
 	int getMapHeight() { return m_MapSizeHeight; };
