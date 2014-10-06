@@ -11,5 +11,6 @@ Features
 Status
 ------
 
-![example](examples/mapview_2014_09_26.png)
+![example1](examples/mapview_2014_10_06[1].png)
+![example2](examples/mapview_2014_10_06[2].png)
 
