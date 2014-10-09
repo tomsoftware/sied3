@@ -93,6 +93,7 @@
     <ClCompile Include="..\..\src\clGFXFile.cpp" />
     <ClCompile Include="..\..\src\clMapFileReader.cpp" />
     <ClCompile Include="..\..\src\clOpenGLTexturesHelper.cpp" />
+    <ClCompile Include="..\..\src\clTextureAtlas.cpp" />
     <ClCompile Include="..\..\src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -105,6 +106,7 @@
     <ClInclude Include="..\..\src\clGFXFile.h" />
     <ClInclude Include="..\..\src\clMapFileReader.h" />
     <ClInclude Include="..\..\src\clOpenGLTexturesHelper.h" />
+    <ClInclude Include="..\..\src\clTextureAtlas.h" />
     <ClInclude Include="..\..\src\main.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

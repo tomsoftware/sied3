@@ -9,6 +9,7 @@ clOpenGLTexturesHelper::clOpenGLTexturesHelper()
 
 clOpenGLTexturesHelper::~clOpenGLTexturesHelper()
 {
+	//- todo! glDeleteTextures();
 }
 
 //-------------------------------------//
@@ -25,11 +26,33 @@ void clOpenGLTexturesHelper::copyGFXimage(unsigned int *dest, unsigned int * src
 		{
 			*curDestP = *srcP;
 			curDestP++;
-			src++;
+			srcP++;
 		}
 	}
 }
 
+//-------------------------------------//
+GLuint clOpenGLTexturesHelper::getFreeTexture()
+{
+	GLuint texID=NULL;
+
+	//- Create one OpenGL texture
+	glGenTextures(1, &texID);
+
+	//- "Bind" the newly created texture
+	glBindTexture(GL_TEXTURE_2D, texID);
+
+	return texID;
+}
+
+
+//-------------------------------------//
+clOpenGLTexturesHelper &clOpenGLTexturesHelper::getInstance()
+{
+	static clOpenGLTexturesHelper instance;
+
+	return instance;
+}
 
 //-------------------------------------//
 void clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(ty_TextureObject * dest, clGFXFile * gfxFileObj, int gfxTextureId00, int gfxTextureId01, int gfxTextureId10, int gfxTextureId11, int forGfxTextureId0, int forGfxTextureId1)
@@ -77,14 +100,10 @@ void clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(ty_TextureObject * d
 
 
 
-
 	//- Create one OpenGL texture
-	glGenTextures(1, &dest->texture);
+	dest->texture = getInstance().getFreeTexture();
 
-	//- "Bind" the newly created texture
-	glBindTexture(GL_TEXTURE_2D, dest->texture);
-
-	//- Give the image to OpenGL
+	//-	Give the image to OpenGL
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w * 2, h * 2, 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, imgData);
 	checkForGlError("glTexImage2D()");
 
@@ -104,7 +123,6 @@ void clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(ty_TextureObject * d
 
 	dest->forTextureId0 = forGfxTextureId0;
 	dest->forTextureId1 = forGfxTextureId1;
-	//dest->forTextureId1 = forGfxTextureId1;
 
 	dest->textType = TEXTURE_TYPE_2x2_HEXAGON;
 
@@ -124,11 +142,9 @@ void clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(ty_TextureObject * dest
 	dest->textType = TEXTURE_TYPE_PLANE;
 
 	//- Create one OpenGL texture
-	glGenTextures(1, &dest->texture);
+	dest->texture = getInstance().getFreeTexture();
 
-	//- "Bind" the newly created texture
-	glBindTexture(GL_TEXTURE_2D, dest->texture);
-
+	
 	//- Give the image to OpenGL
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, dest->width, dest->height, 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, gfxTexture.imageRGBA);
 	checkForGlError("glTexImage2D()");
@@ -193,7 +209,7 @@ bool clOpenGLTexturesHelper::checkForGlError(const char * errorText)
 	case GL_STACK_OVERFLOW: GL_Error_text = "GL_STACK_OVERFLOW"; break;
 	}
 
-	//m_error.AddError("%s Err: %i [%s]", errorText, err, GL_Error_text);
+	getInstance().m_error.AddError("%s Err: %i [%s]", errorText, err, GL_Error_text);
 
 	return true;
 }

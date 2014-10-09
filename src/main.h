@@ -87,6 +87,7 @@ int m_GameLoopCounter = 0;
 
 unsigned int *m_map_AraeHeightObject = NULL;
 unsigned int *m_map_AccessiblePlayerResources = NULL;
+unsigned int *m_map_AraeNeighbor = NULL;
 int m_mapWidth=0;
 int m_mapHeight=0;
 //void drawObject(clOpenGLTexturesHelper::ty_TextureObject *texture, clOpenGLTexturesHelper::ty_TextureObject *torso, int x, int y, int scale = 1);
@@ -96,7 +97,7 @@ int m_mapPosY = 220;
 int m_MouseDownStartX = 0;
 int m_MouseDownStartY = 0;
 
-int m_marker = 0;
+int m_marker = -1;
 
 
 clGFXFile gfxSied12;

@@ -31,7 +31,6 @@ class clOpenGLTexturesHelper
 		};
 
 
-
 		static void loadLandscapeTextureFromGFX(ty_TextureObject * dest, clGFXFile * gfxFileObj, int gfxTextureId);
 		static void loadLandscapeTextureFromGFX2x2(ty_TextureObject * dest, clGFXFile * gfxFileObj, int gfxTextureId00, int gfxTextureId01, int gfxTextureId10, int gfxTextureId11, int forGfxTextureId0, int forGfxTextureId1);
 		static void loadObjectTextureFromGFX(ty_TextureObject * dest, clGFXFile * gfxFileObj, int gfxTextureId, int gfxSharowId, int gfxFram);
@@ -43,13 +42,16 @@ class clOpenGLTexturesHelper
 
 		static bool checkForGlError(const char * errorText);
 
-		clOpenGLTexturesHelper();
-		~clOpenGLTexturesHelper();
 
 	private:
-		//static clError m_error;
-		//clOpenGLTexturesHelper::m_error = clError("clOpenGLTexturesHelper");
+		clOpenGLTexturesHelper();
+		~clOpenGLTexturesHelper();
+		GLuint getFreeTexture();
+		static clOpenGLTexturesHelper &getInstance();
+		clError m_error = clError("clOpenGLTexturesHelper");
+		
 };
+
 
 
 

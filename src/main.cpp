@@ -7,8 +7,10 @@ int main(int argc, char* argv[])
 
 
 	//loadMap("texture.map", clMapFileReader::enum_map_folders::FOLDER_USER);
-	loadMap("448_DEMO.map", clMapFileReader::enum_map_folders::FOLDER_USER);
+	//loadMap("448_DEMO.map", clMapFileReader::enum_map_folders::FOLDER_USER);
 	//loadMap( "flach.map", clMapFileReader::enum_map_folders::FOLDER_USER);
+	loadMap("wueste_gras_wueste.map", clMapFileReader::enum_map_folders::FOLDER_USER);
+
 	loadResource();
 
 	gameLoop();
@@ -319,10 +321,11 @@ void drawObject(clGFXFile::GFX_ObjectTexture *texture, clGFXFile::GFX_ObjectSurf
 //-------------------------------------//
 void drawMap(int posX, int posY)
 {
-	float textOffsetX1 = 0.f;
-	float textOffsetY1 = 0.f;
-	float textOffsetX2 = 0.f;
-	float textOffsetY2 = 0.f;
+	float textX1 = 0.f;
+	float textY1 = 0.f;
+	float textX2 = 0.f;
+	float textY2 = 0.f;
+	float textSize = 0.f;
 	int outX = 0;
 	int outY = 0;
 	int curArea = -1; //- avoid switching textures if not necessary
@@ -348,6 +351,7 @@ void drawMap(int posX, int posY)
 		if ((sumY<m_mapHeight) && (sumY>=0))
 		{
 			unsigned int * pRowData = m_map_AraeHeightObject + (m_mapHeight - sumY)*m_mapWidth;
+			unsigned int * pNeighbor = m_map_AraeNeighbor + (m_mapHeight - sumY)*m_mapWidth;
 
 			for (int x = 0; x < 60; x++)
 			{
@@ -362,8 +366,12 @@ void drawMap(int posX, int posY)
 					//if (area == m_marker) area = 1;
 					if ((area == m_marker) || (txLandscape[area].texture != NULL))
 					{
-
-						if (curArea != area)
+						if (area == m_marker)
+						{
+							glBindTexture(GL_TEXTURE_2D, 0);
+							curArea = -1;
+						}
+						else if (curArea != area)
 						{
 							glBindTexture(GL_TEXTURE_2D, txLandscape[area].texture);
 							curArea = area;
@@ -371,54 +379,149 @@ void drawMap(int posX, int posY)
 
 						glBegin(GL_TRIANGLES);
 
-						//--      1 --- 4  ^
-						//--     / \ B /   |
-						//--    / A \ /    |YSTEP
-						//--   2 --- 3     v
 
 						switch (txLandscape[area].textType)
 						{
 							case clOpenGLTexturesHelper::TEXTURE_TYPE_PLANE:
 								//- X: after 4 Lines in y-direction, X increases by 128/2
-								textOffsetX1 = ((sumX + ((sumY / 4) % 2) * 4) % 8) * 16.f / 128.f + (sumY % 8)* 8.f / 128.f;
-								textOffsetY1 = 16.f / 128.f * (sumY % 8);
+								textX1 = ((sumX + ((sumY / 4) % 2) * 4) % 8) * 16.f / 128.f + (sumY % 8)* 8.f / 128.f;
+								textY1 = 16.f / 128.f * (sumY % 8);
 
-								textOffsetX2 = textOffsetX1 + 8.f / 128.f;
-								textOffsetY2 = textOffsetY1;
+								textX2 = textX1 + 8.f / 128.f;
+								textY2 = textY1;
+
+								//- the size of this texture is always 128x128 pixels 
+								textSize = 16.f / 128.f;
 								break;
 
 							case clOpenGLTexturesHelper::TEXTURE_TYPE_2x2_HEXAGON:
-								textOffsetX1 = 0.5f;
-								textOffsetY1 = 0.f;
-								textOffsetX2 = 0.5f;
-								textOffsetY2 = 0.5f;
+								int n = *(pNeighbor + sumX);
+								
+								float variaton = ((sumX+sumY/2+1) % 2) * 0.5f;
+
+								unsigned char N1 = n & 0xFF;
+								unsigned char N2 = (n>>8) & 0xFF;
+								unsigned char N3 = (n>>16) & 0xFF;
+								unsigned char N4 = (n>>24) & 0xFF;
+
+								//- this texture is a blending texture for the transition of {T0 -> area -> T1}
+								unsigned char T0 = txLandscape[area].forTextureId0; 
+								unsigned char T1 = txLandscape[area].forTextureId1;
+
+								//- the size of this texture is always 64x64. 
+								textSize = 16.f / 64.f;
+
+
+								//--         / N1  /
+								//--    --- 1 --- 4 ---
+								//--   N2  / \ B / 
+								//--      / A \ /  N4  
+								//-- --- 2 --- 3 ---
+								//--    /  N3 /
+
+								//--     . --- .
+								//--    / \   / \
+								//--   /   \ /   \
+								//--  : --- + --- :
+								//--   \   / \   /
+								//--    \ /   \ /
+								//--     ' --- '
+
+								if (N2 == T0)
+								{
+									textX1 = variaton;
+									textY1 = 0.5 + textSize;
+								}
+								else if (N3 == T0)
+								{
+									textX1 = 0.5f * textSize + variaton;
+									textY1 = 0.5f;
+								}
+								else if (N2 == T1)
+								{
+									textX1 = variaton;
+									textY1 = textSize;
+								}
+								else if (N3 == T1)
+								{
+									textX1 = 0.5f * textSize + variaton;
+									textY1 = 0;
+								}
+								else if ((N2 == area) && (N3 == area))
+								{
+									//- this is wrong!
+									textX1 = textSize + textSize*0.5;
+									textY1 = textSize + textSize*0.7;
+								}
+								else
+								{
+									m_error.AddDebug("wrong map pattern");
+								}
+
+								if (N4 == T0)
+								{
+									textX2 = textSize + variaton;
+									textY2 = 0.5f;
+								}
+								else if (N1 == T0)
+								{
+									textX2 = 0.5f * textSize + variaton;
+									textY2 = 0.5f + textSize;
+								}
+								else if (N4 == T1)
+								{
+									textX2 = textSize + variaton;
+									textY2 = 0;
+								}
+								else if (N1 == T1)
+								{
+									textX2 = 0.5f * textSize + variaton;
+									textY2 = textSize;
+								}
+								else if ((N1 == area) && (N4 == area))
+								{
+									//- this is wrong!
+									textX2 = textSize + textSize*0.5;
+									textY2 = textSize;
+								}
+								else
+								{
+									m_error.AddDebug("wrong map pattern");
+								}
+
 								break;
 						}
 
+						
+						//--      1 --- 4  ^
+						//--     / \ B /   |
+						//--    / A \ /    |YSTEP
+						//--   2 --- 3     v
+
 						////// A /////
 						//-- ->1
-						glTexCoord2f(textOffsetX1 + 8.f / 128.f, textOffsetY1 + 16.f / 128.f);
+						glTexCoord2f(textX1 + textSize * 0.5f, textY1 + textSize);
 						glVertex3f(outX + 8, outY + YSTEP, 0.f);
 
 						//-- ->2
-						glTexCoord2f(textOffsetX1, textOffsetY1);
+						glTexCoord2f(textX1, textY1);
 						glVertex3f(outX, outY, 0.f);
 
 						//-- ->3
-						glTexCoord2f(textOffsetX1 + 16.f / 128.f, textOffsetY1);
+						glTexCoord2f(textX1 + textSize, textY1);
 						glVertex3f(outX + 16, outY, 0.f);
 
 						////// B /////
 						//-- ->1
-						glTexCoord2f(textOffsetX2, textOffsetY2 + 16.f / 128.f);
+						glTexCoord2f(textX2, textY2 + textSize);
 						glVertex3f(outX + 8, outY + YSTEP, 0.f);
 
 						//-- ->3
-						glTexCoord2f(textOffsetX2 + 8.f / 128.f, textOffsetY2);
+						glTexCoord2f(textX2 + textSize * 0.5f, textY2);
 						glVertex3f(outX + 16, outY, 0.f);
 
 						//-- ->4
-						glTexCoord2f(textOffsetX2 + 16.f / 128.f, textOffsetY2 + 16.f / 128.f);
+						glTexCoord2f(textX2 + textSize, textY2 + textSize);
 						glVertex3f(outX + 8 + 16, outY + YSTEP, 0.f);
 
 						glEnd();
@@ -569,8 +672,11 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 	//- MapInfo: Accessibilety, Player, Resources
 	m_map_AccessiblePlayerResources = new unsigned int[bufferSize];
 	
+	//- MapInfo: AreaType Neighbors
+	m_map_AraeNeighbor = new unsigned int[bufferSize];
+
 	//- read map informations
-	map.readMapArea(m_map_AraeHeightObject, bufferSize, m_map_AccessiblePlayerResources, bufferSize);
+	map.readMapArea(m_map_AraeHeightObject, bufferSize, m_map_AccessiblePlayerResources, bufferSize, m_map_AraeNeighbor, bufferSize);
 }
 
 
@@ -593,7 +699,7 @@ void loadResource()
 	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[48], &gfxLand, 31); //- beach [OK]
 	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[64], &gfxLand, 18); //- desert [OK]
 	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[80], &gfxLand, 7); //- swamp [OK]
-	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[128], &gfxLand, 24); //- Polar [OK]
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[128], &gfxLand, 24); //- Polar/ice [OK]
 	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[144], &gfxLand, 4); //- mud [OK]
 
 	//- between the different map-textures a blending is created. 
@@ -605,8 +711,41 @@ void loadResource()
 	//-
 	//-- to improve handling of the blending and the variation of textures, the textures for one map-type-index are copyed side by side in one texture:
 	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[20], &gfxLand, 130, 131, 132, 133, 16, 65); //- 128 129 130 131
-	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[65], &gfxLand, 134, 135, 136, 137, 20, 64); //- 128 129 130 131
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[65], &gfxLand, 134, 135, 136, 137, 20, 64); 
+
+	//- water
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[0], &gfxLand, 84, 85, 86, 87, 1, 48);
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[1], &gfxLand, 88, 89, 90, 91, 0, 2);
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[2], &gfxLand, 92, 93, 94, 95, 1, 3);
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[3], &gfxLand, 96, 97, 98, 99, 2, 4);
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[4], &gfxLand, 100, 101, 102, 103, 3, 5);
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[5], &gfxLand, 104, 105, 106, 107, 4, 6);
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[6], &gfxLand, 108, 109, 110, 111, 5, 7);
 	
+	//- rock
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[17], &gfxLand, 120, 121, 122, 123, 16, 33);
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[33], &gfxLand, 124, 125, 126, 127, 17, 32);
+
+	//- mud
+	//-  140, 141
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[23], &gfxLand, 142, 143, 144, 145, 16, 145);
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[145], &gfxLand, 146, 147, 148, 149, 23, 144);
+	//-  150, 151
+
+	//- swamp
+	//-  201, 202
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[21], &gfxLand, 203, 204, 205, 206, 16, 81);
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[81], &gfxLand, 207, 208, 209, 210, 21, 80);
+	//-  211, 212
+    
+
+	//- ice
+	//-  156, 157
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[35], &gfxLand, 158, 159, 160, 161, 32, 129);
+	clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[129], &gfxLand, 162, 163, 164, 165, 35, 128);
+	//-  166, 167
+
+
 
 	//gfxLand.getTextureLandscape(&txLandscape[20], renderer, 20);
 	//gfxLand.getTextureLandscape(&txLandscape[65], renderer, 19);

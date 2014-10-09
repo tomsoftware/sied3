@@ -108,7 +108,7 @@ bool clMapFileReader::loadMap(clFileReader * FR, enum_map_file_version fileVersi
 
 
 //-------------------------------------//
-bool clMapFileReader::readMapArea(unsigned int *outBuffer_AraeHeightObjects, int sizeOfBuffer_AraeHeightObject, unsigned int *outBuffer_AccessiblePlayerResources, int sizeOfBuffer_AccessiblePlayerResources)
+bool clMapFileReader::readMapArea(unsigned int *outBuffer_AraeHeightObjects, int sizeOfBuffer_AraeHeightObject, unsigned int *outBuffer_AccessiblePlayerResources, int sizeOfBuffer_AccessiblePlayerResources, unsigned int *outBuffer_AraeNeighbor, int sizeOfBuffer_AraeNeighbor)
 {
 	ty_file_part *FPart = &m_fileParts[enum_map_file_parts::PART_TYPE_Area];
 
@@ -160,10 +160,14 @@ bool clMapFileReader::readMapArea(unsigned int *outBuffer_AraeHeightObjects, int
 
 				if (out2)
 				{
-					*out2 = (v_accessible) | (v_plyerClaim << 8) || (v_resources << 16);
+					*out2 = (v_accessible) | (v_plyerClaim << 8) | (v_resources << 16);
 					out2++;
 				}
 			}
+		}
+		else
+		{
+			outBuffer_AraeHeightObjects = NULL;
 		}
 
 	}
@@ -173,7 +177,44 @@ bool clMapFileReader::readMapArea(unsigned int *outBuffer_AraeHeightObjects, int
 		return false;
 	}
 
-	
+
+	//- calc neighbors
+	if ((outBuffer_AraeNeighbor != NULL) && (sizeOfBuffer_AraeNeighbor == dataCount) && (outBuffer_AraeHeightObjects != NULL))
+	{
+		unsigned int * out3 = outBuffer_AraeNeighbor;
+		unsigned int * out4 = outBuffer_AraeNeighbor + m_MapSizeWidth * (m_MapSizeHeight-1);
+
+		for (int x = m_MapSizeWidth - 1; x >= 0; x--)
+		{
+			*out3 = 0;
+			out3++;
+			*out4 = 0;
+			out4++;
+		}
+
+		unsigned int * inBuf_10 = outBuffer_AraeHeightObjects + m_MapSizeWidth * 0;
+		unsigned int * inBuf_01 = outBuffer_AraeHeightObjects + m_MapSizeWidth * 1 - 1;
+		unsigned int * inBuf_12 = outBuffer_AraeHeightObjects + m_MapSizeWidth * 2;
+		unsigned int * inBuf_21 = outBuffer_AraeHeightObjects + m_MapSizeWidth * 1 + 1;
+
+		//--     | 10 |
+		//--  ------------
+		//--  01 |    | 21
+		//--  ------------
+		//--     | 12 |  
+		out3 = outBuffer_AraeNeighbor + m_MapSizeWidth;
+		dataCount = (m_MapSizeHeight-2) * m_MapSizeWidth;
+		for (int i = dataCount; i > 0; i--)
+		{
+			*out3 = (((*inBuf_10) >> 8) & 0xFF) | (((*inBuf_01)) & 0xFF00) | (((*inBuf_12) << 8) & 0xFF0000) | (((*inBuf_21) << 16) & 0xFF000000);
+			out3++;
+			inBuf_10++;
+			inBuf_01++;
+			inBuf_21++;
+			inBuf_12++;
+		}
+	}
+
 	return true;
 }
 
