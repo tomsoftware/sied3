@@ -74,7 +74,7 @@ void clTextureAtlas::AddTexture(tyTextureAtlasPos *outTexturePos, unsigned int *
 	if ((m_slot_pos_x[slot] + widthSum) > m_width)
 	{
 
-		if ((m_filled_y_pos + m_slot_pos_x[slot]) > m_height)
+		if ((m_filled_y_pos + SLOT_HEIGHT[slot]) > m_height)
 		{
 			m_error.AddError("Texture can't by coppyed to Texture Atlas! Texture Atlas is FULL!");
 			return;
@@ -152,10 +152,23 @@ GLuint clTextureAtlas::createGLTextureAtlas()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
+	m_error.AddDebug("Position: %i px out of: %i px", m_filled_y_pos, m_height);
 
 	return texID;
 }
 
+
+//-------------------------------------//
+int clTextureAtlas::getHeight()
+{
+	return m_height;
+}
+
+//-------------------------------------//
+int clTextureAtlas::getWidth()
+{
+	return m_width;
+}
 
 //-------------------------------------//
 bool clTextureAtlas::checkForGlError(const char * errorText)

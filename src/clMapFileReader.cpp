@@ -192,26 +192,26 @@ bool clMapFileReader::readMapArea(unsigned int *outBuffer_AraeHeightObjects, int
 			out4++;
 		}
 
-		unsigned int * inBuf_10 = outBuffer_AraeHeightObjects + m_MapSizeWidth * 0;
-		unsigned int * inBuf_01 = outBuffer_AraeHeightObjects + m_MapSizeWidth * 1 - 1;
-		unsigned int * inBuf_12 = outBuffer_AraeHeightObjects + m_MapSizeWidth * 2;
-		unsigned int * inBuf_21 = outBuffer_AraeHeightObjects + m_MapSizeWidth * 1 + 1;
+		unsigned int * inBuf_N1 = outBuffer_AraeHeightObjects - m_MapSizeWidth * 1 + 0;
+		unsigned int * inBuf_N2 = outBuffer_AraeHeightObjects - m_MapSizeWidth * 0 + 0;
+		unsigned int * inBuf_N4 = outBuffer_AraeHeightObjects - m_MapSizeWidth * 1 + 1;
+		unsigned int * inBuf_N3 = outBuffer_AraeHeightObjects - m_MapSizeWidth * 0 + 1;
 
-		//--     | 10 |
-		//--  ------------
-		//--  01 |    | 21
-		//--  ------------
-		//--     | 12 |  
+		//--      N1 --- N4 
+		//--     /  \ B  /    
+		//--    / A  \  /    
+		//--   N2 --- N3
+
 		out3 = outBuffer_AraeNeighbor + m_MapSizeWidth;
 		dataCount = (m_MapSizeHeight-2) * m_MapSizeWidth;
 		for (int i = dataCount; i > 0; i--)
 		{
-			*out3 = (((*inBuf_10) >> 8) & 0xFF) | (((*inBuf_01)) & 0xFF00) | (((*inBuf_12) << 8) & 0xFF0000) | (((*inBuf_21) << 16) & 0xFF000000);
+			*out3 = (((*inBuf_N1) >> 8) & 0xFF) | (((*inBuf_N2)) & 0xFF00) | (((*inBuf_N4) << 8) & 0xFF0000) | (((*inBuf_N3) << 16) & 0xFF000000);
 			out3++;
-			inBuf_10++;
-			inBuf_01++;
-			inBuf_21++;
-			inBuf_12++;
+			inBuf_N1++;
+			inBuf_N2++;
+			inBuf_N4++;
+			inBuf_N3++;
 		}
 	}
 

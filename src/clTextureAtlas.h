@@ -40,10 +40,16 @@ class clTextureAtlas
 		void AddTexture(tyTextureAtlasPos *destPos, unsigned int * data, int width, int height, int repeatWidth = 0);
 		GLuint createGLTextureAtlas();
 
+
 		void loadLandscapeTextureFromGFX(tyTextureAtlasPos * destPos, clGFXFile * gfxFileObj, int gfxTextureId);
 
 
+		int getHeight();
+		int getWidth();
+
 	private:
+
+
 		int m_slot_pos_x[_TEXTURE_HEIGHT_COUNT];
 		int m_slot_pos_y[_TEXTURE_HEIGHT_COUNT];
 		unsigned int * m_buffer;
@@ -57,7 +63,7 @@ class clTextureAtlas
 	private:
 		enumTexturSizeSlot getSlotByHeight(int height);
 		void copyimage(unsigned int *dest, unsigned int * src, int posX, int posY, int width, int height, int destWidth, int srcWidth=-1);
-		bool clTextureAtlas::checkForGlError(const char * errorText);
+		bool checkForGlError(const char * errorText);
 };
 
 __declspec(selectany)

@@ -12,7 +12,7 @@ void clError::AddError(const char * errorString, ...)
 	va_list args;
 	va_start(args, errorString);
 
-	printf("!Error: [%s] : ", m_ClassName);
+	printf("!Error: [%s] ", m_ClassName);
 	vprintf(errorString, args);
 	printf("\n");
 
@@ -25,7 +25,7 @@ void clError::AddDebug(const char * debugString, ...)
 	va_list args;
 	va_start(args, debugString);
 
-	printf(" Debug: [%s] : ", m_ClassName);
+	printf(" Debug: [%s] ", m_ClassName);
 	vprintf(debugString, args);
 	printf("\n");
 

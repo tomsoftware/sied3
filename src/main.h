@@ -15,7 +15,7 @@
 #include "clMapFileReader.h"
 #include "clGameObjects.h"
 #include "clOpenGLTexturesHelper.h"
-
+#include "clLandscapeTextures.h"
 
 struct ty_Animation
 {
@@ -69,11 +69,13 @@ GLFWwindow* m_window;
 
 
 clOpenGLTexturesHelper::ty_TextureObject txBuild;
-clOpenGLTexturesHelper::ty_TextureObject txLandscape[256];
+//clOpenGLTexturesHelper::ty_TextureObject txLandscape[256];
 clOpenGLTexturesHelper::ty_TextureObject txObjects[256];
 clOpenGLTexturesHelper::ty_TextureObject txBuildings[256];
 clOpenGLTexturesHelper::ty_TextureObject txSied;
 clOpenGLTexturesHelper::ty_TextureObject txTorso;
+
+clLandscapeTextures * m_LandscapeText;
 
 //SDL_Texture * mapPreview;
 
@@ -84,6 +86,39 @@ ty_Animation animWizzard;
 int AnimationID = 382; //368;
 int BuildingID = 10;
 int m_GameLoopCounter = 0;
+
+struct ty_mapLandscape
+{
+
+	//- drawing:
+	//--       1 --- 4  
+	//--      / \ B /
+	//--     / A \ /   
+	//--   (2) ---3 
+
+	//- A texture in texture atlas
+	float textureA_var1_X;
+	float textureA_var1_Y;
+	//- B texture in texture atlas
+	float textureB_var1_X;
+	float textureB_var1_Y;
+
+	//- A texture in texture atlas
+	float textureA_var2_X;
+	float textureA_var2_Y;
+	//- B texture in texture atlas
+	float textureB_var2_X;
+	float textureB_var2_Y;
+
+	//- point (2) is the main point of this feld
+	int AraeType; //- type of point
+	int AraeHight;  //- height of point
+
+	clLandscapeTextures::enumTextureType textureType;
+};
+
+ty_mapLandscape *m_map_landscape;
+
 
 unsigned int *m_map_AraeHeightObject = NULL;
 unsigned int *m_map_AccessiblePlayerResources = NULL;

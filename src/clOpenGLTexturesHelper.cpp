@@ -13,6 +13,7 @@ clOpenGLTexturesHelper::~clOpenGLTexturesHelper()
 }
 
 //-------------------------------------//
+/*
 void clOpenGLTexturesHelper::copyGFXimage(unsigned int *dest, unsigned int * src, int posX, int posY, int  width, int  height, int  destWidth)
 {
 	unsigned int * srcP = src;
@@ -30,8 +31,9 @@ void clOpenGLTexturesHelper::copyGFXimage(unsigned int *dest, unsigned int * src
 		}
 	}
 }
-
+*/
 //-------------------------------------//
+/*
 GLuint clOpenGLTexturesHelper::getFreeTexture()
 {
 	GLuint texID=NULL;
@@ -44,7 +46,7 @@ GLuint clOpenGLTexturesHelper::getFreeTexture()
 
 	return texID;
 }
-
+*/
 
 //-------------------------------------//
 clOpenGLTexturesHelper &clOpenGLTexturesHelper::getInstance()
@@ -55,6 +57,7 @@ clOpenGLTexturesHelper &clOpenGLTexturesHelper::getInstance()
 }
 
 //-------------------------------------//
+/*
 void clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(ty_TextureObject * dest, clGFXFile * gfxFileObj, int gfxTextureId00, int gfxTextureId01, int gfxTextureId10, int gfxTextureId11, int forGfxTextureId0, int forGfxTextureId1)
 {
 	clGFXFile::GFXFILE_TextureObject gfxTexture;
@@ -127,8 +130,10 @@ void clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(ty_TextureObject * d
 	dest->textType = TEXTURE_TYPE_2x2_HEXAGON;
 
 }
+*/
 
 //-------------------------------------//
+/*
 void clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(ty_TextureObject * dest, clGFXFile * gfxFileObj, int gfxTextureId)
 {
 	clGFXFile::GFXFILE_TextureObject gfxTexture;
@@ -156,7 +161,7 @@ void clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(ty_TextureObject * dest
 	//- unload image data
 	gfxFileObj->unload_GFX_Object(&gfxTexture);
 }
-
+*/
 
 //-------------------------------------//
 void clOpenGLTexturesHelper::loadObjectTextureFromGFX(ty_TextureObject * dest, clGFXFile * gfxFileObj, int gfxTextureId, int gfxSharowId, int gfxFram)
@@ -200,13 +205,13 @@ bool clOpenGLTexturesHelper::checkForGlError(const char * errorText)
 	const char * GL_Error_text = "";
 	switch (err)
 	{
-	case GL_INVALID_ENUM: GL_Error_text = "GL_INVALID_ENUM"; break;
-	case GL_INVALID_VALUE: GL_Error_text = "GL_INVALID_VALUE"; break;
-	case GL_INVALID_OPERATION: GL_Error_text = "GL_INVALID_OPERATION"; break;
-	case GL_INVALID_FRAMEBUFFER_OPERATION: GL_Error_text = "GL_INVALID_VALUE"; break;
-	case GL_OUT_OF_MEMORY: GL_Error_text = "GL_OUT_OF_MEMORY"; break;
-	case GL_STACK_UNDERFLOW: GL_Error_text = "GL_STACK_UNDERFLOW"; break;
-	case GL_STACK_OVERFLOW: GL_Error_text = "GL_STACK_OVERFLOW"; break;
+		case GL_INVALID_ENUM: GL_Error_text = "GL_INVALID_ENUM"; break;
+		case GL_INVALID_VALUE: GL_Error_text = "GL_INVALID_VALUE"; break;
+		case GL_INVALID_OPERATION: GL_Error_text = "GL_INVALID_OPERATION"; break;
+		case GL_INVALID_FRAMEBUFFER_OPERATION: GL_Error_text = "GL_INVALID_VALUE"; break;
+		case GL_OUT_OF_MEMORY: GL_Error_text = "GL_OUT_OF_MEMORY"; break;
+		case GL_STACK_UNDERFLOW: GL_Error_text = "GL_STACK_UNDERFLOW"; break;
+		case GL_STACK_OVERFLOW: GL_Error_text = "GL_STACK_OVERFLOW"; break;
 	}
 
 	getInstance().m_error.AddError("%s Err: %i [%s]", errorText, err, GL_Error_text);

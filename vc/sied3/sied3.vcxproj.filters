@@ -54,6 +54,9 @@
     <ClCompile Include="..\..\src\clTextureAtlas.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\clLandscapeTextures.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\main.h">
@@ -87,6 +90,9 @@
       <Filter>Headerdateien\helpers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\clTextureAtlas.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\clLandscapeTextures.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

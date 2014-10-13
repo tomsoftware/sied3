@@ -91,6 +91,7 @@
     <ClCompile Include="..\..\src\clFont.cpp" />
     <ClCompile Include="..\..\src\clGameObjects.cpp" />
     <ClCompile Include="..\..\src\clGFXFile.cpp" />
+    <ClCompile Include="..\..\src\clLandscapeTextures.cpp" />
     <ClCompile Include="..\..\src\clMapFileReader.cpp" />
     <ClCompile Include="..\..\src\clOpenGLTexturesHelper.cpp" />
     <ClCompile Include="..\..\src\clTextureAtlas.cpp" />
@@ -104,6 +105,7 @@
     <ClInclude Include="..\..\src\clFont.h" />
     <ClInclude Include="..\..\src\clGameObjects.h" />
     <ClInclude Include="..\..\src\clGFXFile.h" />
+    <ClInclude Include="..\..\src\clLandscapeTextures.h" />
     <ClInclude Include="..\..\src\clMapFileReader.h" />
     <ClInclude Include="..\..\src\clOpenGLTexturesHelper.h" />
     <ClInclude Include="..\..\src\clTextureAtlas.h" />
