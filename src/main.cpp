@@ -9,9 +9,9 @@ int main(int argc, char* argv[])
 	loadResource();
 
 	//loadMap("texture.map", clMapFileReader::enum_map_folders::FOLDER_USER);
-	//loadMap("448_DEMO.map", clMapFileReader::enum_map_folders::FOLDER_USER);
+	loadMap("448_DEMO.map", clMapFileReader::enum_map_folders::FOLDER_USER);
 	//loadMap( "flach.map", clMapFileReader::enum_map_folders::FOLDER_USER);
-	loadMap("wueste_gras_wueste.map", clMapFileReader::enum_map_folders::FOLDER_USER);
+	//loadMap("wueste_gras_wueste.map", clMapFileReader::enum_map_folders::FOLDER_USER);
 
 	//loadMap("leer1.map", clMapFileReader::enum_map_folders::FOLDER_USER);
 
@@ -328,7 +328,7 @@ void drawMap(int posX, int posY)
 	float textY2 = 0.f;
 	int outX = 0;
 	int outY = 0;
-	int curArea = -1; //- avoid switching textures if not necessary
+
 	float texWidth = (float)m_LandscapeText->getWidth();
 	float texHeight = (float)m_LandscapeText->getHeight();
 	const float textSizeWidth = 16.0f / texWidth;
@@ -366,34 +366,43 @@ void drawMap(int posX, int posY)
 
 				if ((sumX < m_mapWidth) && (sumX >= 0))
 				{
-					ty_mapLandscape l = *(pRowData + sumX);
+					ty_mapLandscape * l = (pRowData + sumX);
 
+					//- for debugging we can switch one map-types to white 
+					if (l->AraeType == m_marker)
+					{
+						l =& m_markerType;
+					}
+					else
+					{
+						l = l;
+					}
 
-					if ((l.textureType == clLandscapeTextures::enumTextureType::TEXTURE_TYPE_SINGEL))
+					if ((l->textureType == clLandscapeTextures::enumTextureType::TEXTURE_TYPE_SINGEL))
 					{
 						if ((sumX + sumY / 2) % 2)
 						{
-							textX1 = l.textureA_var1_X;
-							textY1 = l.textureA_var1_Y;
+							textX1 = l->textureA_var1_X;
+							textY1 = l->textureA_var1_Y;
 
-							textX2 = l.textureB_var1_X;
-							textY2 = l.textureB_var1_Y;
+							textX2 = l->textureB_var1_X;
+							textY2 = l->textureB_var1_Y;
 						}
 						else
 						{
-							textX1 = l.textureA_var2_X;
-							textY1 = l.textureA_var2_Y;
+							textX1 = l->textureA_var2_X;
+							textY1 = l->textureA_var2_Y;
 
-							textX2 = l.textureB_var2_X;
-							textY2 = l.textureB_var2_Y;
+							textX2 = l->textureB_var2_X;
+							textY2 = l->textureB_var2_Y;
 						}
 					}
-					else if ((l.textureType == clLandscapeTextures::enumTextureType::TEXTURE_TYPE_REPEAT128x128))
+					else if ((l->textureType == clLandscapeTextures::enumTextureType::TEXTURE_TYPE_REPEAT128x128))
 					{
 						//textX1 = l.textureA_var1_X + (((sumX + ((sumY / 4) % 2) * 4) % 8) * 16.f + (sumY % 8)* 8.f) / texWidth;
-						//- toDo: switch every 8 row
-						textX1 = l.textureA_var1_X + textSizeWidth * ((sumX + sumY / 2) % 8);
-						textY1 = l.textureA_var1_Y + textSizeHeight * (sumY % 8);
+						//- toDo: switch every 8th row
+						textX1 = l->textureA_var1_X + textSizeWidth * ((sumX + sumY / 2) % 8);
+						textY1 = l->textureA_var1_Y + textSizeHeight * (sumY % 8);
 
 						textX2 = textX1 + textSizeWidthHalf;
 						textY2 = textY1;
@@ -401,7 +410,7 @@ void drawMap(int posX, int posY)
 
 						
 
-					if (l.textureType != clLandscapeTextures::enumTextureType::TEXTURE_TYPE_NOT_FOUND)
+					if (l->textureType != clLandscapeTextures::enumTextureType::TEXTURE_TYPE_NOT_FOUND)
 					{
 						//--      1 --- 4  ^
 						//--     / \ B /   |
@@ -503,7 +512,7 @@ void drawMapObjects(int posX, int posY)
 
 						////// A /////
 						//-- ->1
-						glTexCoord2f(0,0);
+						glTexCoord2f(0, 0);
 						glVertex2i(curX, curY + curH);
 
 						//-- ->2
@@ -520,8 +529,6 @@ void drawMapObjects(int posX, int posY)
 
 
 						glEnd();
-
-
 					}
 				}
 				outX += 16;
@@ -599,7 +606,7 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 	for (int i = bufferSize; i > 0; i--)
 	{
 		int n = *pNeighbor;
-		clLandscapeTextures::tyTriangelTexture * pTrea;
+		clLandscapeTextures::tyTriangleTexture * pTrea;
 
 
 		//--      N1 --- N4 
@@ -612,11 +619,12 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 		unsigned char N3 = (n >> 16) & 0xFF;
 		unsigned char N4 = (n >> 24) & 0xFF;
 
-		pTrea = m_LandscapeText->getTriangelTextureInformation(N1, N2, N3);
-		
+		pTrea = m_LandscapeText->getTriangleTextureInformation(N1, N2, N3);
+
+		pMapPos->AraeType = N1;
+
 		if (pTrea != NULL)
 		{
-			pMapPos->AraeType = 1;
 			pMapPos->textureType = pTrea->texType;
 
 			pMapPos->textureA_var1_X = texWidth * pTrea->up_var1_x;
@@ -627,10 +635,10 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 		else
 		{
 			pMapPos->textureType = clLandscapeTextures::enumTextureType::TEXTURE_TYPE_NOT_FOUND;
-			//m_error.AddError("texture not found: %i %i %i", (int) N1, (int) N2, (int) N3);
+			m_error.AddError("texture not found: %i %i %i", (int) N1, (int) N2, (int) N3);
 		}
 
-		pTrea = m_LandscapeText->getTriangelTextureInformation(N2, N3, N4);
+		pTrea = m_LandscapeText->getTriangleTextureInformation(N1, N3, N4);
 		if (pTrea != NULL)
 		{
 			pMapPos->textureB_var1_X = texWidth * pTrea->down_var1_x;
@@ -641,7 +649,7 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 		else
 		{
 			pMapPos->textureType = clLandscapeTextures::enumTextureType::TEXTURE_TYPE_NOT_FOUND;
-			//m_error.AddError("texture not found: %i %i %i", (int) N1, (int) N3, (int) N4);
+			m_error.AddError("texture not found: %i %i %i", (int) N1, (int) N3, (int) N4);
 		}
 
 		
@@ -667,9 +675,9 @@ void loadResource()
 	int count = gfxLand.getTextureLandscapeCount();
 
 
-	m_LandscapeText = new clLandscapeTextures(128*5, 128*3, 100);
+	m_LandscapeText = new clLandscapeTextures(128*8, 128*4, 300);
 
-	m_LandscapeText->AddTexturePlane128x128(&gfxLand, 10, 7); //- see
+	m_LandscapeText->AddTexturePlane128x128(&gfxLand, 10, 7); //- sea
 	m_LandscapeText->AddTexturePlane128x128(&gfxLand, 0, 16); //- grass
 	m_LandscapeText->AddTexturePlane128x128(&gfxLand, 21, 32); //- rock
 	m_LandscapeText->AddTexturePlane128x128(&gfxLand, 31, 48); //- beach
@@ -698,10 +706,126 @@ void loadResource()
 	m_LandscapeText->AddTextureHexagon(&gfxLand, 108, 109, 110, 111, 6, 7);
 
 
+	//- sea constant (no Gradient) level
+	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 17, 0);
+	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 16, 1);
+	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 15, 2);
+	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 14, 3);
+	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 13, 4);
+	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 12, 5);
+	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 11, 6);
+
+	//- sea to beach
+	m_LandscapeText->AddTextureHexagon(&gfxLand, 37, 38, 39, 40, 48, 0);
+
+	//- beach to grass
+	m_LandscapeText->AddTextureHexagon(&gfxLand, 112, 113, 114, 115, 48, 16);
+
+	//- [grass] 16 -> 17 -> 33 -> 32 [rock]
+	m_LandscapeText->AddTextureHexagon(&gfxLand, 116, 117, 118, 119, 16, 17);
+	m_LandscapeText->AddTextureHexagon(&gfxLand, 120, 121, 122, 123, 17, 33);
+	m_LandscapeText->AddTextureHexagon(&gfxLand, 124, 125, 126, 127, 33, 32);
+
+	//- [rock]
+	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 22, 33);
+	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 23, 17);
+
+
+	//- [grass] 16 -> 23 -> 145 -> 144 [mud]
+	m_LandscapeText->AddTextureHexagon(&gfxLand, 140, 141, 142, 143, 16, 23);
+	m_LandscapeText->AddTextureHexagon(&gfxLand, 144, 145, 146, 147, 23, 145);
+	m_LandscapeText->AddTextureHexagon(&gfxLand, 148, 149, 150, 151, 145, 144);
+
+
+	//- [rock] 32 -> 35 -> 129 -> 128 [ice]
+	m_LandscapeText->AddTextureHexagon(&gfxLand, 156, 157, 158, 159, 32, 35);
+	m_LandscapeText->AddTextureHexagon(&gfxLand, 160, 161, 162, 163, 35, 129);
+	m_LandscapeText->AddTextureHexagon(&gfxLand, 164, 165, 166, 167, 129, 128);
+	//---> ?? 27,28,29,30
+
+	//- [ice]
+	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 25, 35);
+	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 26, 129);
+
+
+	//-  [grass] 16 -> 21 -> 81 -> 80 [swamp]
+	m_LandscapeText->AddTextureHexagon(&gfxLand, 201, 202, 203, 204, 16, 21);
+	m_LandscapeText->AddTextureHexagon(&gfxLand, 205, 206, 207, 208, 21, 81);
+	m_LandscapeText->AddTextureHexagon(&gfxLand, 209, 210, 211, 212, 81, 80);
+
+	//- [swamp]
+	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 8, 21);
+	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 9, 81);
+
+	//- desert
+	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 19, 65);
+	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 20, 20);
+
+
+	//- grass -> river
+	m_LandscapeText->AddTextureHexagon(&gfxLand, 52, 53, 54, 55, 16, 96);
+	m_LandscapeText->AddTextureHexagon(&gfxLand, 56, 57, 58, 59, 16, 97);
+	m_LandscapeText->AddTextureHexagon(&gfxLand, 60, 61, 62, 63, 16, 98);
+	m_LandscapeText->AddTextureHexagon(&gfxLand, 64, 65, 66, 67, 16, 99);
+
+	//- beach [48] -> river
+	m_LandscapeText->AddTextureHexagon(&gfxLand, 68, 69, 70, 71, 48, 96);
+	m_LandscapeText->AddTextureHexagon(&gfxLand, 72, 73, 74, 75, 48, 97);
+	m_LandscapeText->AddTextureHexagon(&gfxLand, 76, 77, 78, 79, 48, 98);
+	m_LandscapeText->AddTextureHexagon(&gfxLand, 80, 81, 82, 83, 48, 99);
+
+	//- riffer -> sea
+	m_LandscapeText->AddTextureMapping(0, 0, 99, 0, 0, 0);
+	m_LandscapeText->AddTextureMapping(0, 0, 96, 0, 0, 0);
+	//m_LandscapeText->AddTextureHexagon(&gfxLand, 84, 85, 86, 87, 0, 99);
+	//m_LandscapeText->AddTextureHexagon(&gfxLand, 84, 85, 86, 87, 0, 96);
+
+
+	m_LandscapeText->AddTextureMapping(16, 96, 97, 16, 97, 97);
+	m_LandscapeText->AddTextureMapping(16, 97, 96, 16, 97, 97);
+
+	m_LandscapeText->AddTextureMapping(16, 96, 99, 16, 98, 98);
+	m_LandscapeText->AddTextureMapping(16, 99, 96, 16, 98, 98);
+
+	m_LandscapeText->AddTextureMapping(16, 97, 98, 16, 98, 98);
+	m_LandscapeText->AddTextureMapping(16, 98, 99, 16, 99, 99);
+
+	m_LandscapeText->AddTextureMapping(0, 96, 99, 0, 0, 0);
+	m_LandscapeText->AddTextureMapping(0, 97, 99, 0, 0, 0);
+	m_LandscapeText->AddTextureMapping(0, 98, 99, 0, 0, 0);
+	m_LandscapeText->AddTextureMapping(0, 99, 99, 0, 0, 0);
+	m_LandscapeText->AddTextureMapping(96, 0, 99, 0, 0, 0);
+	m_LandscapeText->AddTextureMapping(97, 0, 99, 0, 0, 0);
+	m_LandscapeText->AddTextureMapping(98, 0, 99, 0, 0, 0);
+	m_LandscapeText->AddTextureMapping(99, 0, 99, 0, 0, 0);
 
 
 
+	m_LandscapeText->AddTextureMapping(48, 96, 0, 48, 0, 0);
+	m_LandscapeText->AddTextureMapping(48, 0, 96, 48, 0, 0);
+	m_LandscapeText->AddTextureMapping(48, 97, 0, 48, 0, 0);
+	m_LandscapeText->AddTextureMapping(48, 0, 97, 48, 0, 0);
+	m_LandscapeText->AddTextureMapping(48, 98, 0, 48, 0, 0);
+	m_LandscapeText->AddTextureMapping(48, 0, 98, 48, 0, 0);
+	m_LandscapeText->AddTextureMapping(48, 99, 0, 48, 0, 0);
+	m_LandscapeText->AddTextureMapping(48, 0, 99, 48, 0, 0);
 
+	//- degugging Colors
+	float texWidth = 1.0f / m_LandscapeText->getWidth();
+	float texHeight = 1.0f / m_LandscapeText->getHeight();
+	clLandscapeTextures::tyTriangleTexture * pTrea = m_LandscapeText->AddTexturePlainColored32x32(255, 255, 255, 255);
+	m_markerType.AraeHight = 0;
+	m_markerType.textureType = pTrea->texType;
+	m_markerType.textureA_var1_X = texWidth * pTrea->up_var1_x;
+	m_markerType.textureA_var1_Y = texHeight * pTrea->up_var1_y;
+	m_markerType.textureA_var2_X = texWidth * pTrea->up_var2_x;
+	m_markerType.textureA_var2_Y = texHeight * pTrea->up_var2_y;
+	m_markerType.textureB_var1_X = texWidth * pTrea->down_var1_x;
+	m_markerType.textureB_var1_Y = texHeight * pTrea->down_var1_y;
+	m_markerType.textureB_var2_X = texWidth * pTrea->down_var2_x;
+	m_markerType.textureB_var2_Y = texHeight * pTrea->down_var2_y;
+	
+	//- END degugging Colors
 
 	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[7], &gfxLand, 10); //- see [OK]
 	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[16], &gfxLand, 0); //- grass [OK]

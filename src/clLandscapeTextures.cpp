@@ -4,16 +4,16 @@
 clLandscapeTextures::clLandscapeTextures(int TextureAtlasWidth, int TextureAtlasHeight, int TriangleCount)
 	: clTextureAtlas(TextureAtlasWidth, TextureAtlasHeight)
 {
-	m_TriangelListPos = -1;
-	m_TriangelListSize = TriangleCount;
+	m_TriangleListPos = -1;
+	m_TriangleListSize = TriangleCount;
 
-	m_TriangelList = new tyTriangelTexture[m_TriangelListSize];
+	m_TriangleList = new tyTriangleTexture[m_TriangleListSize];
 }
 
 //-------------------------------------//
 clLandscapeTextures::~clLandscapeTextures()
 {
-	delete [] m_TriangelList;
+	delete [] m_TriangleList;
 }
 
 
@@ -24,15 +24,15 @@ unsigned int clLandscapeTextures::getTriangleMapId(unsigned char p1, unsigned ch
 }
 
 //-------------------------------------//
-int clLandscapeTextures::findTriangel(unsigned int TriangleMapId, bool returnNegativeIfNotFound)
+int clLandscapeTextures::findTriangle(unsigned int TriangleMapId, bool returnNegativeIfNotFound)
 {
 	int minPos = 0;
-	int maxPos = m_TriangelListPos;
+	int maxPos = m_TriangleListPos;
 
-	if (m_TriangelListPos < 0) return 0;
+	if (m_TriangleListPos < 0) return 0;
 
-	unsigned int minVal = m_TriangelList[minPos].MapTypeId;
-	unsigned int maxVal = m_TriangelList[maxPos].MapTypeId;
+	unsigned int minVal = m_TriangleList[minPos].MapTypeId;
+	unsigned int maxVal = m_TriangleList[maxPos].MapTypeId;
 
 	if (TriangleMapId == maxVal) return maxPos;
 	if (TriangleMapId == minVal) return minPos;
@@ -54,7 +54,7 @@ int clLandscapeTextures::findTriangel(unsigned int TriangleMapId, bool returnNeg
 	while (minPos <= maxPos)
 	{
 		pos = (maxPos + minPos) / 2;
-		val = m_TriangelList[pos].MapTypeId;
+		val = m_TriangleList[pos].MapTypeId;
 
 		if (TriangleMapId > val)
 		{
@@ -70,37 +70,37 @@ int clLandscapeTextures::findTriangel(unsigned int TriangleMapId, bool returnNeg
 		}
 	}
 
-	if (returnNegativeIfNotFound) if (m_TriangelList[pos].MapTypeId != TriangleMapId) pos = -minPos;
+	if (returnNegativeIfNotFound) if (m_TriangleList[pos].MapTypeId != TriangleMapId) return -minPos;
 
 	return minPos;
 }
 
 //-------------------------------------//
-clLandscapeTextures::tyTriangelTexture * clLandscapeTextures::createNewTriangel(unsigned int TriangleMapId)
+clLandscapeTextures::tyTriangleTexture * clLandscapeTextures::createNewTriangle(unsigned int TriangleMapId)
 {
-	if (m_TriangelListPos == m_TriangelListSize)
+	if (m_TriangleListPos == m_TriangleListSize)
 	{
-		m_error.AddError("(createNewTriangel) Unable to add more triangel information.");
+		m_error.AddError("(createNewTriangle) Unable to add more Triangle information.");
 		return NULL;
 	}
 
 	//- find the matched or the next item
-	int newID = findTriangel(TriangleMapId);
+	int newID = findTriangle(TriangleMapId);
 
 
-	//m_error.AddDebug("newID: %i - val: %i  [-1]%i [0]%i [+1]%i [+2]%i", newID, TriangleMapId, m_TriangelList[newID - 1], m_TriangelList[newID], m_TriangelList[newID + 1], m_TriangelList[newID+2]);
+	//m_error.AddDebug("newID: %i - val: %i  [-1]%i [0]%i [+1]%i [+2]%i", newID, TriangleMapId, m_TriangleList[newID - 1], m_TriangleList[newID], m_TriangleList[newID + 1], m_TriangleList[newID+2]);
 
 	//- move all Items behind the ID one step to the end to create a free space
-	for (int i = m_TriangelListPos; i >= newID; i--)
+	for (int i = m_TriangleListPos; i >= newID; i--)
 	{
-		m_TriangelList[i + 1] = m_TriangelList[i];
+		m_TriangleList[i + 1] = m_TriangleList[i];
 	}
 
 	//- increase List size
-	m_TriangelListPos++;
+	m_TriangleListPos++;
 
 
-	tyTriangelTexture * pTList = &m_TriangelList[newID];
+	tyTriangleTexture * pTList = &m_TriangleList[newID];
 	pTList->MapTypeId = TriangleMapId;
    
 	return pTList;
@@ -115,7 +115,7 @@ GLuint clLandscapeTextures::getGLTextureId()
 
 	m_GLTextureID = createGLTextureAtlas();
 
-	m_error.AddDebug("LandscapeTextures: count: %i out of: %i", m_TriangelListPos, m_TriangelListSize);
+	m_error.AddDebug("LandscapeTextures: count: %i out of: %i", m_TriangleListPos, m_TriangleListSize);
 
 	return m_GLTextureID;
 }
@@ -123,25 +123,77 @@ GLuint clLandscapeTextures::getGLTextureId()
 
 
 //-------------------------------------//
-clLandscapeTextures::tyTriangelTexture * clLandscapeTextures::getTriangelTextureInformation(unsigned char n1, unsigned char n2, unsigned char n3)
+clLandscapeTextures::tyTriangleTexture * clLandscapeTextures::getTriangleTextureInformation(unsigned char n1, unsigned char n2, unsigned char n3)
 {
-	int id = findTriangel(getTriangleMapId(n1, n2, n3), true);
+	int textMapID = getTriangleMapId(n1, n2, n3);
+	int id = findTriangle(textMapID, true);
 
 	if (id >= 0)
 	{
-		return &m_TriangelList[id];
+		if (textMapID != m_TriangleList[id].MapTypeId)
+		{
+			return NULL;
+		}
+		return &m_TriangleList[id];
 	}
 	else
 	{
 		return NULL;
 	}
 }
+//-------------------------------------//
+void clLandscapeTextures::copyTriangleInformation(tyTriangleTexture * dest, tyTriangleTexture * src)
+{
+	if ((dest == NULL) || (src == NULL)) return;
 
+	//- save typID
+	int tmpID = dest->MapTypeId;
+
+	//- copy full type
+	memcpy(dest, src, sizeof(dest));
+
+
+	//- reset typID
+	dest->MapTypeId = tmpID;
+}
+
+//-------------------------------------//
+void clLandscapeTextures::AddTextureMapping(int fromMapType1, int  fromMapType2, int  fromMapType3, int  toMapType1, int  toMapType2, int  toMapType3)
+{
+	tyTriangleTexture * pTList;
+	tyTriangleTexture * toId;
+
+	//- 1.
+	pTList = createNewTriangle(getTriangleMapId(fromMapType1, fromMapType2, fromMapType3));
+	if (pTList == NULL) return;
+
+	toId = getTriangleTextureInformation(toMapType1, toMapType2, toMapType3);
+	copyTriangleInformation(pTList, toId);
+
+
+	//- 2.
+	pTList = createNewTriangle(getTriangleMapId(fromMapType2, fromMapType3, fromMapType1));
+	if (pTList == NULL) return;
+
+	toId = getTriangleTextureInformation(toMapType2, toMapType3, toMapType1);
+	copyTriangleInformation(pTList, toId);
+
+
+	//- 3.
+	pTList = createNewTriangle(getTriangleMapId(fromMapType3, fromMapType1, fromMapType2));
+	if (pTList == NULL) return;
+
+	toId = getTriangleTextureInformation(toMapType3, toMapType1, toMapType2);
+	copyTriangleInformation(pTList, toId);
+
+
+
+}
 
 //-------------------------------------//
 void clLandscapeTextures::AddHexagonToTriangleInfo(clTextureAtlas::tyTextureAtlasPos * atlasPosVariante1, clTextureAtlas::tyTextureAtlasPos * atlasPosVariante2, int fromMapType, int toMapType)
 {
-	tyTriangelTexture * pTList;
+	tyTriangleTexture * pTList;
 
 
 	//--     . --- .           1    1 --- 2  
@@ -152,7 +204,8 @@ void clLandscapeTextures::AddHexagonToTriangleInfo(clTextureAtlas::tyTextureAtla
 	//--    \ /   \ /
 	//--     ' --- '
 
-	pTList = createNewTriangel(getTriangleMapId(fromMapType, fromMapType, toMapType));
+	pTList = createNewTriangle(getTriangleMapId(fromMapType, fromMapType, toMapType));
+	if (pTList == NULL) return;
 	pTList->texType = enumTextureType::TEXTURE_TYPE_SINGEL;
 
 	//- A
@@ -179,7 +232,8 @@ void clLandscapeTextures::AddHexagonToTriangleInfo(clTextureAtlas::tyTextureAtla
 	//--    \ / A \ /
 	//--     ' --- '
 
-	pTList = createNewTriangel(getTriangleMapId(toMapType, fromMapType, fromMapType));
+	pTList = createNewTriangle(getTriangleMapId(toMapType, fromMapType, fromMapType));
+	if (pTList == NULL) return;
 	pTList->texType = enumTextureType::TEXTURE_TYPE_SINGEL;
 
 	//- A
@@ -206,7 +260,8 @@ void clLandscapeTextures::AddHexagonToTriangleInfo(clTextureAtlas::tyTextureAtla
 	//--    \ /   \ /
 	//--     ' --- '
 
-	pTList = createNewTriangel(getTriangleMapId(fromMapType, toMapType, fromMapType));
+	pTList = createNewTriangle(getTriangleMapId(fromMapType, toMapType, fromMapType));
+	if (pTList == NULL) return;
 	pTList->texType = enumTextureType::TEXTURE_TYPE_SINGEL;
 
 	//- A
@@ -249,8 +304,8 @@ bool clLandscapeTextures::AddTextureHexagon(clGFXFile * gfxFileObj, int gfxTextu
 	gfxFileObj->unload_GFX_Object(&gfxTexture);
 
 	//-----------
-	//- add triangels
-	AddHexagonToTriangleInfo(&atlasPos1, &atlasPos2, toMapType, fromMapType);
+	//- add triangles
+	AddHexagonToTriangleInfo(&atlasPos1, &atlasPos2, fromMapType, toMapType);
 
 
 	//-----------
@@ -272,12 +327,60 @@ bool clLandscapeTextures::AddTextureHexagon(clGFXFile * gfxFileObj, int gfxTextu
 
 
 	//-----------
-	//- add triangels
-	AddHexagonToTriangleInfo(&atlasPos1, &atlasPos2, fromMapType, toMapType);
+	//- add triangles
+	AddHexagonToTriangleInfo(&atlasPos1, &atlasPos2, toMapType, fromMapType);
 
 	return true;
 }
 
+
+//-------------------------------------//
+clLandscapeTextures::tyTriangleTexture * clLandscapeTextures::AddTexturePlainColored32x32(unsigned char r, unsigned char g, unsigned char b, int MapType)
+{
+	clTextureAtlas::tyTextureAtlasPos atlasPos;
+	tyTriangleTexture * pTList;
+	unsigned int imageRGBA[32 * 32];
+	unsigned int color = (255 | r << 8 | g << 16 | b << 24);
+
+	//- fill buffer
+	for (int i = sizeof(imageRGBA) / sizeof(int) -1; i >= 0; i--) imageRGBA[i] = color;
+
+
+	//- copy image to tmp buffer
+	AddTexture(&atlasPos, (unsigned int *) &imageRGBA, 32, 32);
+
+
+
+	pTList = createNewTriangle(getTriangleMapId(MapType, MapType, MapType));
+	if (pTList == NULL) return NULL;
+	pTList->texType = enumTextureType::TEXTURE_TYPE_SINGEL;
+
+	//--  +- . --- . -+ 
+	//--  | / \   / \ |
+	//--  |/ A \ / A \|
+	//--  : --- + --- : 
+	//--  |\ B / \ B /|
+	//--  | \ /   \ / |
+	//--  +- ' --- ' -+
+
+
+	//- A
+	pTList->up_var1_x = atlasPos.x + 0;
+	pTList->up_var1_y = atlasPos.y + 8;
+
+	pTList->up_var2_x = atlasPos.x + 16;
+	pTList->up_var2_y = atlasPos.y + 8;
+
+	//- B
+	pTList->down_var1_x = atlasPos.x + 0;
+	pTList->down_var1_y = atlasPos.y + 16;
+
+	pTList->down_var2_x = atlasPos.x + 16;
+	pTList->down_var2_y = atlasPos.y + 16;
+
+
+	return pTList;
+}
 
 
 //-------------------------------------//
@@ -285,7 +388,7 @@ bool clLandscapeTextures::AddTexturePlane32x32(clGFXFile * gfxFileObj, int gfxTe
 {
 	clGFXFile::GFXFILE_TextureObject gfxTexture;
 	clTextureAtlas::tyTextureAtlasPos atlasPos;
-	tyTriangelTexture * pTList;
+	tyTriangleTexture * pTList;
 
 
 	gfxFileObj->getTextureLandscape(&gfxTexture, gfxTextureId);
@@ -296,7 +399,8 @@ bool clLandscapeTextures::AddTexturePlane32x32(clGFXFile * gfxFileObj, int gfxTe
 
 	
 
-	pTList = createNewTriangel(getTriangleMapId(MapType, MapType, MapType));
+	pTList = createNewTriangle(getTriangleMapId(MapType, MapType, MapType));
+	if (pTList == NULL) return false;
 	pTList->texType = enumTextureType::TEXTURE_TYPE_SINGEL;
 
 	//--  +- . --- . -+ 
@@ -331,7 +435,7 @@ bool clLandscapeTextures::AddTexturePlane128x128(clGFXFile * gfxFileObj, int gfx
 {
 	clGFXFile::GFXFILE_TextureObject gfxTexture;
 	clTextureAtlas::tyTextureAtlasPos atlasPos;
-	tyTriangelTexture * pTList;
+	tyTriangleTexture * pTList;
 
 
 	gfxFileObj->getTextureLandscape(&gfxTexture, gfxTextureId);
@@ -352,7 +456,7 @@ bool clLandscapeTextures::AddTexturePlane128x128(clGFXFile * gfxFileObj, int gfx
 	gfxFileObj->unload_GFX_Object(&gfxTexture);
 
 
-	pTList = createNewTriangel(getTriangleMapId(MapType, MapType, MapType));
+	pTList = createNewTriangle(getTriangleMapId(MapType, MapType, MapType));
 	pTList->texType = enumTextureType::TEXTURE_TYPE_REPEAT128x128;
 
 	//- A

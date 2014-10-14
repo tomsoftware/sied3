@@ -118,7 +118,7 @@ struct ty_mapLandscape
 };
 
 ty_mapLandscape *m_map_landscape;
-
+ty_mapLandscape m_markerType; 
 
 unsigned int *m_map_AraeHeightObject = NULL;
 unsigned int *m_map_AccessiblePlayerResources = NULL;

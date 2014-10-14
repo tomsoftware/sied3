@@ -34,7 +34,7 @@ public:
 		TEXTURE_TYPE_REPEAT128x128 = 2,
 	};
 
-	struct tyTriangelTexture
+	struct tyTriangleTexture
 	{
 		//- Triangle up
 		//-         /\ 
@@ -59,14 +59,17 @@ public:
 		int MapTypeId=0;
 	};
 
-	tyTriangelTexture * m_TriangelList;
-	int m_TriangelListPos;
-	int m_TriangelListSize;
+	tyTriangleTexture * m_TriangleList;
+	int m_TriangleListPos;
+	int m_TriangleListSize;
 
 	bool AddTextureHexagon(clGFXFile * gfxFileObj, int gfxTextureFromId_var1, int gfxTextureFromId_var2, int gfxTextureToId_var1, int gfxTextureToId_var2, int fromMapType, int toMapType);
 	unsigned int getTriangleMapId(unsigned char p1, unsigned char p2, unsigned char p3);
 	bool AddTexturePlane32x32(clGFXFile * gfxFileObj, int gfxTextureId, int MapType);
 	bool AddTexturePlane128x128(clGFXFile * gfxFileObj, int gfxTextureId, int MapType);
+	clLandscapeTextures::tyTriangleTexture * AddTexturePlainColored32x32(unsigned char r, unsigned char g, unsigned char b, int MapType);
+
+	void AddTextureMapping(int fromMapType1, int  fromMapType2, int  fromMapType3, int  toMapType1, int  toMapType2, int  toMapType3);
 
 	GLuint getGLTextureId();
 	GLuint m_GLTextureID = NULL;
@@ -77,14 +80,15 @@ public:
 	//- add triangels
 	void AddHexagonToTriangleInfo(clTextureAtlas::tyTextureAtlasPos * atlasPosVariante1, clTextureAtlas::tyTextureAtlasPos * atlasPosVariante2, int fromMapType, int toMapType);
 	
-	tyTriangelTexture * getTriangelTextureInformation(unsigned char n1, unsigned char n2, unsigned char n3);
+	tyTriangleTexture * getTriangleTextureInformation(unsigned char n1, unsigned char n2, unsigned char n3);
 
 
-	int findTriangel(unsigned int TriangleMapId, bool returnNegativeIfNotFound = false);
+	int findTriangle(unsigned int TriangleMapId, bool returnNegativeIfNotFound = false);
 private:
-	tyTriangelTexture * createNewTriangel(unsigned int TriangleMapId);
+	tyTriangleTexture * createNewTriangle(unsigned int TriangleMapId);
 	clError m_error = clError("clLandTexte");
-	
+	void copyTriangleInformation(tyTriangleTexture * dest, tyTriangleTexture * src);
+
 };
 
 
