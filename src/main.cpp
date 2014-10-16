@@ -3,17 +3,21 @@
 
 int main(int argc, char* argv[])
 {
-	if (!initWindow()) return -1;
+	if (!initGLContext()) return -1;
 
 
 	loadResource();
 
 	//loadMap("texture.map", clMapFileReader::enum_map_folders::FOLDER_USER);
-	loadMap("448_DEMO.map", clMapFileReader::enum_map_folders::FOLDER_USER);
+	//loadMap("448_DEMO.map", clMapFileReader::enum_map_folders::FOLDER_USER);
+	loadMap("hoch.map", clMapFileReader::enum_map_folders::FOLDER_USER);
 	//loadMap( "flach.map", clMapFileReader::enum_map_folders::FOLDER_USER);
 	//loadMap("wueste_gras_wueste.map", clMapFileReader::enum_map_folders::FOLDER_USER);
 
 	//loadMap("leer1.map", clMapFileReader::enum_map_folders::FOLDER_USER);
+
+
+	initShader();
 
 	gameLoop();
 
@@ -40,15 +44,17 @@ void unloadWindow()
 
 
 //-------------------------------------//
-bool initWindow()
+bool initGLContext()
 {
 	glfwSetErrorCallback(error_callback);
+
 
 	if (!glfwInit())
 	{
 		m_error.AddError("Error initWindow:glfwInit()");
 		return false;
 	}
+
 
 
 	m_window = glfwCreateWindow(1024, 640, "Sied3", NULL, NULL);
@@ -61,12 +67,22 @@ bool initWindow()
 
 	glfwMakeContextCurrent(m_window);
 
+	//- init glew functions
+	GLenum err = glewInit();
+	if (err != GLEW_OK)
+	{
+		m_error.AddError("glewInit() Failed: %s", glewGetErrorString(err));
+	}
+
+
 	//- Registrate Callbacks
 	glfwSetKeyCallback(m_window, key_callback);
 
 	glfwSetMouseButtonCallback(m_window, mouse_click_callback);
 
 	glfwSetCursorPosCallback(m_window, mouse_move_callback);
+
+
 	return true;
 
 }
@@ -203,6 +219,9 @@ void gameLoop()
 		drawMap(m_mapPosX, m_mapPosY);
 		drawMapObjects(m_mapPosX, m_mapPosY);
 
+		
+
+		//rendershadertest();
 
 		/*
 		//////////////////////
@@ -345,7 +364,11 @@ void drawMap(int posX, int posY)
 
 	glBindTexture(GL_TEXTURE_2D, m_LandscapeText->getGLTextureId());
 
+	glUniform1f(m_brightness, 1);
+
 	glBegin(GL_TRIANGLES);
+
+
 
 
 	//- the heigh of one line
@@ -408,10 +431,28 @@ void drawMap(int posX, int posY)
 						textY2 = textY1;
 					}
 
-						
+					unsigned char H1 = l->AraeHeight1;
+					unsigned char H2 = l->AraeHeight;
+					unsigned char H3 = l->AraeHeight3;
+					unsigned char H4 = l->AraeHeight4;
+					
+					//- disable the Height information
+					if (!m_useHeight) H1 = H2 = H3 = H4 = 0;
+
 
 					if (l->textureType != clLandscapeTextures::enumTextureType::TEXTURE_TYPE_NOT_FOUND)
 					{
+						if (H1 > H2)
+						{
+							glColor4f(0.6, 0.6, 0.6, 0.6);
+						}
+						else
+						{
+							glColor4f(0.5, 0.5, 0.5, 0.5);
+						}
+						
+
+
 						//--      1 --- 4  ^
 						//--     / \ B /   |
 						//--    / A \ /    |YSTEP
@@ -419,29 +460,30 @@ void drawMap(int posX, int posY)
 
 						////// A /////
 						//-- ->1
+
 						glTexCoord2f(textX1 + textSizeWidthHalf, textY1 + textSizeHeight);
-						glVertex3i(outX + 8, outY + YSTEP, 0);
+						glVertex3i(outX + 8, outY + YSTEP + H1, 0);
 
 						//-- ->2
 						glTexCoord2f(textX1, textY1);
-						glVertex3i(outX, outY, 0);
+						glVertex3i(outX, outY + H2, 0);
 
 						//-- ->3
 						glTexCoord2f(textX1 + textSizeWidth, textY1);
-						glVertex3i(outX + 16, outY, 0);
+						glVertex3i(outX + 16, outY + H3, 0);
 
 						////// B /////
 						//-- ->1
 						glTexCoord2f(textX2, textY2 + textSizeHeight);
-						glVertex3i(outX + 8, outY + YSTEP, 0);
+						glVertex3i(outX + 8, outY + YSTEP + H1, 0);
 
 						//-- ->3
 						glTexCoord2f(textX2 + textSizeWidthHalf, textY2);
-						glVertex3i(outX + 16, outY, 0);
+						glVertex3i(outX + 16, outY + H3, 0);
 
 						//-- ->4
 						glTexCoord2f(textX2 + textSizeWidth, textY2 + textSizeHeight);
-						glVertex3i(outX + 8 + 16, outY + YSTEP, 0);
+						glVertex3i(outX + 8 + 16, outY + YSTEP + H4, 0);
 					}
 				}
 				outX += 16;
@@ -587,37 +629,63 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 	//- MapInfo: Accessibilety, Player, Resources
 	m_map_AccessiblePlayerResources = new unsigned int[bufferSize];
 	
-	//- MapInfo: AreaType Neighbors
-	m_map_AraeNeighbor = new unsigned int[bufferSize];
 
 	//- read map informations
-	map.readMapArea(m_map_AraeHeightObject, bufferSize, m_map_AccessiblePlayerResources, bufferSize, m_map_AraeNeighbor, bufferSize);
+	map.readMapArea(m_map_AraeHeightObject, bufferSize, m_map_AccessiblePlayerResources, bufferSize);
 
 
 	//- MapInfo structure
 	m_map_landscape = new ty_mapLandscape[bufferSize];
 
 	ty_mapLandscape * pMapPos = &m_map_landscape[0];
-	unsigned int * pNeighbor = &m_map_AraeNeighbor[0];
+	unsigned int * pNeighbourN4 = &m_map_AraeHeightObject[0] - m_mapWidth;
+	unsigned int * pNeighbourN3 = &m_map_AraeHeightObject[0];
 	
 	float texWidth = 1.0f / m_LandscapeText->getWidth();
 	float texHeight = 1.0f / m_LandscapeText->getHeight();
 
-	for (int i = bufferSize; i > 0; i--)
-	{
-		int n = *pNeighbor;
-		clLandscapeTextures::tyTriangleTexture * pTrea;
+	//- Area Type
+	unsigned char N1 = 7;
+	unsigned char N2 = 7;
+	unsigned char N3 = 7;
+	unsigned char N4 = 7;
 
+	//- Area Height
+	unsigned char H1 = 7;
+	unsigned char H2 = 7;
+	unsigned char H3 = 7;
+	unsigned char H4 = 7;
+
+
+	for (int i = 0; i < bufferSize; i++)
+	{
+		//- ignore first row
+		if (i > m_mapWidth)
+		{
+			unsigned int v4 = *pNeighbourN4;
+			unsigned int v3 = *pNeighbourN3;
+			N1 = N4;
+			N2 = N3;
+			N4 = (v4 >> 8) & 0xFF;
+			N3 = (v3 >> 8) & 0xFF;
+
+			H1 = H4;
+			H2 = H3;
+			H4 = v4 & 0xFF;
+			H3 = v3 & 0xFF;
+		}
+
+		clLandscapeTextures::tyTriangleTexture * pTrea;
 
 		//--      N1 --- N4 
 		//--     /  \ B  /    
 		//--    / A  \  /    
 		//--   N2 --- N3    
 
-		unsigned char N1 = n & 0xFF;
-		unsigned char N2 = (n >> 8) & 0xFF;
-		unsigned char N3 = (n >> 16) & 0xFF;
-		unsigned char N4 = (n >> 24) & 0xFF;
+		pMapPos->AraeHeight = H2;
+		pMapPos->AraeHeight1 = H1;
+		pMapPos->AraeHeight3 = H3;
+		pMapPos->AraeHeight4 = H4;
 
 		pTrea = m_LandscapeText->getTriangleTextureInformation(N1, N2, N3);
 
@@ -634,7 +702,14 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 		}
 		else
 		{
-			pMapPos->textureType = clLandscapeTextures::enumTextureType::TEXTURE_TYPE_NOT_FOUND;
+			//- this combination is not defined
+			pMapPos->textureType = clLandscapeTextures::enumTextureType::TEXTURE_TYPE_SINGEL;
+
+			pMapPos->textureA_var1_X = m_ErrorType.textureA_var1_X;
+			pMapPos->textureA_var1_Y = m_ErrorType.textureA_var1_Y;
+			pMapPos->textureA_var2_X = m_ErrorType.textureA_var2_X;
+			pMapPos->textureA_var2_Y = m_ErrorType.textureA_var2_Y;
+			
 			m_error.AddError("texture not found: %i %i %i", (int) N1, (int) N2, (int) N3);
 		}
 
@@ -648,12 +723,20 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 		}
 		else
 		{
-			pMapPos->textureType = clLandscapeTextures::enumTextureType::TEXTURE_TYPE_NOT_FOUND;
+			//- this combination is not defined
+			pMapPos->textureType = clLandscapeTextures::enumTextureType::TEXTURE_TYPE_SINGEL;
+
+			pMapPos->textureB_var1_X = m_ErrorType.textureB_var1_X;
+			pMapPos->textureB_var1_Y = m_ErrorType.textureB_var1_Y;
+			pMapPos->textureB_var2_X = m_ErrorType.textureB_var2_X;
+			pMapPos->textureB_var2_Y = m_ErrorType.textureB_var2_Y;
+
 			m_error.AddError("texture not found: %i %i %i", (int) N1, (int) N3, (int) N4);
 		}
 
 		
-		pNeighbor++;
+		pNeighbourN4++;
+		pNeighbourN3++;
 		pMapPos++;
 
 	}
@@ -661,9 +744,107 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 }
 
 
+//-------------------------------------//
+
+
+/*
+void rendershadertest(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	
+
+	glLoadIdentity();
+	glRotatef(1, 0, angle, angle * .1);
+	glBegin(GL_TRIANGLES);
+	glVertex3f(-1, -.5, 0);
+	glVertex3f(0, 1, 0);
+	glVertex3f(1, 0, 0);
+	glEnd();
+	angle += .02;
+	
+}
+*/
+
+//-------------------------------------//
+void initShader()
+{
+#define STRINGIFY(A) #A
+
+	//- Create a shader program
+	m_shader_Program = glCreateProgram();
 
 
 
+	/*
+	const char *f =
+		"varying float x, y, z;"
+		"uniform float r_mod;"
+		"float rand(float s, float r) { return mod(mod(s, r + r_mod) * 112341, 1); }"
+		"void main() {"
+		"	gl_FragColor = vec4(rand(gl_FragCoord.x, x), rand(gl_FragCoord.y, y), rand(gl_FragCoord.z, z), 1);"
+		"}";
+		*/
+
+
+
+	const GLchar* pixle_shader_source = STRINGIFY(
+		//uniform float r_brightness;
+		uniform sampler2D tex;
+		void main()
+		{
+			gl_FragColor = texture2D(tex, vec2( gl_TexCoord[0] ))*gl_Color*2; //*r_brightness
+		}
+	);
+
+
+	/*
+		"// Interpolated values from the vertex shaders in vec2 UV;"
+		""
+		"// Ouput data"
+		"out vec3 color;"
+		""
+		"// Values that stay constant for the whole mesh."
+		"uniform sampler2D myTextureSampler;"
+		"void maina(){"
+		"	// Output color = color of the texture at the specified UV"
+		"	color = texture(myTextureSampler, UV).rgb;"
+		"}";
+		*/
+	/*
+	const char *v =
+		"varying float x, y, z;"
+		"void main() {"
+		"	gl_Position = ftransform();"
+		"	x = gl_Position.x; y = gl_Position.y; z = gl_Position.z;"
+		"	x += y; y -= x; z += x - y;"
+		"}";
+		*/
+
+	m_pixle_shader = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(m_pixle_shader, 1, &pixle_shader_source, 0);
+	glCompileShader(m_pixle_shader);
+	//clOpenGLTexturesHelper::checkForGlError("glCompileShader(m_pixle_shader)");
+	clOpenGLTexturesHelper::checkForGlShaderError(m_pixle_shader, "glCompileShader(m_pixle_shader)");
+
+
+	glAttachShader(m_shader_Program, m_pixle_shader);
+	clOpenGLTexturesHelper::checkForGlError("glAttachShader(m_shader_Program, m_pixle_shader)");
+
+	
+
+	//glShaderSource(vs, 1, &v, 0);
+	//vs = glCreateShader(GL_VERTEX_SHADER);
+	//glCompileShader(vs);
+	//glAttachShader(prog, vs);
+
+	glLinkProgram(m_shader_Program);
+	//clOpenGLTexturesHelper::checkForGlError("glLinkProgram(m_shader_Program)");
+	clOpenGLTexturesHelper::checkForGlShaderError(m_pixle_shader, "glAttachShader(m_shader_Program, m_pixle_shader)");
+
+	glUseProgram(m_shader_Program);
+	m_brightness = glGetUniformLocation(m_shader_Program, "r_brightness");
+	clOpenGLTexturesHelper::checkForGlError("glGetUniformLocation(r_brightness)");
+}
 
 //-------------------------------------//
 void loadResource()
@@ -671,7 +852,8 @@ void loadResource()
 
 	//- Landscape
 	clGFXFile gfxLand = clGFXFile("Siedler3_00.f8007e01f.dat");
-
+	//clGFXFile gfxLand = clGFXFile("Siedler3_00.f8007e01f - [sand übergang].dat");
+	
 	int count = gfxLand.getTextureLandscapeCount();
 
 
@@ -774,6 +956,7 @@ void loadResource()
 	m_LandscapeText->AddTextureHexagon(&gfxLand, 76, 77, 78, 79, 48, 98);
 	m_LandscapeText->AddTextureHexagon(&gfxLand, 80, 81, 82, 83, 48, 99);
 
+	/*
 	//- riffer -> sea
 	m_LandscapeText->AddTextureMapping(0, 0, 99, 0, 0, 0);
 	m_LandscapeText->AddTextureMapping(0, 0, 96, 0, 0, 0);
@@ -809,12 +992,14 @@ void loadResource()
 	m_LandscapeText->AddTextureMapping(48, 0, 98, 48, 0, 0);
 	m_LandscapeText->AddTextureMapping(48, 99, 0, 48, 0, 0);
 	m_LandscapeText->AddTextureMapping(48, 0, 99, 48, 0, 0);
+	*/
+
 
 	//- degugging Colors
 	float texWidth = 1.0f / m_LandscapeText->getWidth();
 	float texHeight = 1.0f / m_LandscapeText->getHeight();
 	clLandscapeTextures::tyTriangleTexture * pTrea = m_LandscapeText->AddTexturePlainColored32x32(255, 255, 255, 255);
-	m_markerType.AraeHight = 0;
+	m_markerType.AraeHeight = 0;
 	m_markerType.textureType = pTrea->texType;
 	m_markerType.textureA_var1_X = texWidth * pTrea->up_var1_x;
 	m_markerType.textureA_var1_Y = texHeight * pTrea->up_var1_y;
@@ -825,6 +1010,21 @@ void loadResource()
 	m_markerType.textureB_var2_X = texWidth * pTrea->down_var2_x;
 	m_markerType.textureB_var2_Y = texHeight * pTrea->down_var2_y;
 	
+
+	pTrea = m_LandscapeText->AddTexturePlainColored32x32(0, 0, 0, 254);
+	m_ErrorType.AraeHeight = 0;
+	m_ErrorType.textureType = pTrea->texType;
+	m_ErrorType.textureA_var1_X = texWidth * pTrea->up_var1_x;
+	m_ErrorType.textureA_var1_Y = texHeight * pTrea->up_var1_y;
+	m_ErrorType.textureA_var2_X = texWidth * pTrea->up_var2_x;
+	m_ErrorType.textureA_var2_Y = texHeight * pTrea->up_var2_y;
+	m_ErrorType.textureB_var1_X = texWidth * pTrea->down_var1_x;
+	m_ErrorType.textureB_var1_Y = texHeight * pTrea->down_var1_y;
+	m_ErrorType.textureB_var2_X = texWidth * pTrea->down_var2_x;
+	m_ErrorType.textureB_var2_Y = texHeight * pTrea->down_var2_y;
+
+
+
 	//- END degugging Colors
 
 	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[7], &gfxLand, 10); //- see [OK]
@@ -973,6 +1173,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			case GLFW_KEY_KP_SUBTRACT:
 				m_marker--;
 				m_error.AddDebug("Marker: %i", m_marker);
+				break;
+			case 'h':
+			case 'H':
+				m_useHeight = !m_useHeight;
 				break;
 			case 'd': // switch rendering modes (fill -> wire -> point)
 			case 'D':

@@ -41,7 +41,7 @@ class clOpenGLTexturesHelper
 		//void static load_game_buildings_roman(SDL_Renderer *renderer, clGFXFile &gfxObjects, clGFXFile::GFX_ObjectTexture txObjects[255]);
 
 		static bool checkForGlError(const char * errorText);
-
+		static bool checkForGlShaderError(GLuint shaderProgram, const char * errorText);
 
 	private:
 		clOpenGLTexturesHelper();

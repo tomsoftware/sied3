@@ -108,7 +108,7 @@ bool clMapFileReader::loadMap(clFileReader * FR, enum_map_file_version fileVersi
 
 
 //-------------------------------------//
-bool clMapFileReader::readMapArea(unsigned int *outBuffer_AraeHeightObjects, int sizeOfBuffer_AraeHeightObject, unsigned int *outBuffer_AccessiblePlayerResources, int sizeOfBuffer_AccessiblePlayerResources, unsigned int *outBuffer_AraeNeighbor, int sizeOfBuffer_AraeNeighbor)
+bool clMapFileReader::readMapArea(unsigned int *outBuffer_AraeHeightObjects, int sizeOfBuffer_AraeHeightObject, unsigned int *outBuffer_AccessiblePlayerResources, int sizeOfBuffer_AccessiblePlayerResources)
 {
 	ty_file_part *FPart = &m_fileParts[enum_map_file_parts::PART_TYPE_Area];
 
@@ -177,43 +177,6 @@ bool clMapFileReader::readMapArea(unsigned int *outBuffer_AraeHeightObjects, int
 		return false;
 	}
 
-
-	//- calc neighbors
-	if ((outBuffer_AraeNeighbor != NULL) && (sizeOfBuffer_AraeNeighbor == dataCount) && (outBuffer_AraeHeightObjects != NULL))
-	{
-		unsigned int * out3 = outBuffer_AraeNeighbor;
-		unsigned int * out4 = outBuffer_AraeNeighbor + m_MapSizeWidth * (m_MapSizeHeight-1);
-
-		for (int x = m_MapSizeWidth - 1; x >= 0; x--)
-		{
-			*out3 = 0;
-			out3++;
-			*out4 = 0;
-			out4++;
-		}
-
-		unsigned int * inBuf_N1 = outBuffer_AraeHeightObjects + m_MapSizeWidth * 1 + 0;
-		unsigned int * inBuf_N2 = outBuffer_AraeHeightObjects + m_MapSizeWidth * 2 + 0;
-		unsigned int * inBuf_N3 = outBuffer_AraeHeightObjects + m_MapSizeWidth * 2 + 1;
-		unsigned int * inBuf_N4 = outBuffer_AraeHeightObjects + m_MapSizeWidth * 1 + 1;
-
-		//--      N1 --- N4 
-		//--     /  \ B  /    
-		//--    / A  \  /    
-		//--   N2 --- N3
-
-		out3 = outBuffer_AraeNeighbor + m_MapSizeWidth;
-		dataCount = (m_MapSizeHeight-2) * m_MapSizeWidth;
-		for (int i = dataCount; i > 0; i--)
-		{
-			*out3 = (((*inBuf_N1) >> 8) & 0xFF) | (((*inBuf_N2)) & 0xFF00) | (((*inBuf_N3) << 8) & 0xFF0000) | (((*inBuf_N4) << 16) & 0xFF000000);
-			out3++;
-			inBuf_N1++;
-			inBuf_N2++;
-			inBuf_N4++;
-			inBuf_N3++;
-		}
-	}
 
 	return true;
 }

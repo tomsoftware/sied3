@@ -114,7 +114,7 @@ public:
 	int getMapWidth() { return m_MapSizeWidth; };
 	int getMapHeight() { return m_MapSizeHeight; };
 
-	bool readMapArea(unsigned int *outBuffer_AraeHeightObjects = NULL, int sizeOfBuffer_AraeHeightObject = 0, unsigned int *outBuffer_PlayerAccessibleResources = NULL, int sizeOfBuffer_PlayerAccessibleResources = 0, unsigned int *outBuffer_AraeNeighbor=NULL, int sizeOfBuffer_AraeNeighbor=0);
+	bool readMapArea(unsigned int *outBuffer_AraeHeightObjects = NULL, int sizeOfBuffer_AraeHeightObject = 0, unsigned int *outBuffer_PlayerAccessibleResources = NULL, int sizeOfBuffer_PlayerAccessibleResources = 0);
 };
 
 #endif

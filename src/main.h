@@ -4,9 +4,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define GLEW_STATIC
+
 // Include GLEW. Always include it before gl.h and glfw.h, since it's a bit magic.
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+
+//#pragma comment(lib, "glew32.lib")
 
 #include <iostream>
 
@@ -53,7 +57,7 @@ int main(int argc, char* argv []);
 void gameLoop();
 void setUpCam();
 
-bool initWindow();
+bool initGLContext();
 void unloadWindow();
 
 
@@ -111,18 +115,23 @@ struct ty_mapLandscape
 	float textureB_var2_Y;
 
 	//- point (2) is the main point of this feld
-	int AraeType; //- type of point
-	int AraeHight;  //- height of point
+	unsigned char AraeType; //- type of point
+	unsigned char AraeHeight;  //- height of point
+
+	unsigned char AraeHeight1;  //- height of point
+	unsigned char AraeHeight3;  //- height of point
+	unsigned char AraeHeight4;  //- height of point
 
 	clLandscapeTextures::enumTextureType textureType;
 };
 
 ty_mapLandscape *m_map_landscape;
 ty_mapLandscape m_markerType; 
+ty_mapLandscape m_ErrorType;
 
 unsigned int *m_map_AraeHeightObject = NULL;
 unsigned int *m_map_AccessiblePlayerResources = NULL;
-unsigned int *m_map_AraeNeighbor = NULL;
+//unsigned int *m_map_AraeNeighbor = NULL;
 int m_mapWidth=0;
 int m_mapHeight=0;
 //void drawObject(clOpenGLTexturesHelper::ty_TextureObject *texture, clOpenGLTexturesHelper::ty_TextureObject *torso, int x, int y, int scale = 1);
@@ -133,7 +142,7 @@ int m_MouseDownStartX = 0;
 int m_MouseDownStartY = 0;
 
 int m_marker = -1;
-
+bool m_useHeight = true;
 
 clGFXFile gfxSied12;
 clGFXFile gfxSied11;
@@ -149,5 +158,15 @@ static void mouse_click_callback(GLFWwindow *window, int button, int action, int
 static void mouse_move_callback(GLFWwindow *window, double xpos, double ypos);
 
 
+void initShader();
+//void rendershadertest();
+
+GLuint m_brightness; //- shader Variable
+GLuint m_pixle_shader;
+GLuint m_shader_Program;
+
+//ProgramObject: GLhandle;
+//VertexShaderObject: GLhandle;
+//FragmentShaderObject: GLhandle;
 
 #endif

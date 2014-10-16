@@ -123,7 +123,7 @@ void clTextureAtlas::copyimage(unsigned int *dest, unsigned int * src, int posX,
 	for (int y = 0; y < height; y++)
 	{
 		unsigned int * curDestP = destP + destWidth * y + posX;
-		unsigned int * srcP = src + y * srcWidth;
+		unsigned int * srcP = src + (height - y - 1) * srcWidth;
 
 		for (int x = width; x > 0; x--)
 		{

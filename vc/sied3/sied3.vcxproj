@@ -42,7 +42,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>D:\Entwicklung\VC\sied3\dependency;D:\Entwicklung\VC\sied3\dependency\glext\include;D:\Entwicklung\VC\sied3\dependency\glfw\include;D:\Entwicklung\VC\sied3\dependency\glew\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Entwicklung\VC\sied3\dependency\glut;D:\Entwicklung\VC\sied3\dependency\glext\lib;D:\Entwicklung\VC\sied3\dependency\glfw\lib-msvc120;D:\Entwicklung\VC\sied3\dependency\glew\bin\Release\Win32;$(LibraryPath)</LibraryPath>
+    <LibraryPath>D:\Entwicklung\VC\sied3\dependency\glut;D:\Entwicklung\VC\sied3\dependency\glext\lib;D:\Entwicklung\VC\sied3\dependency\glfw\lib-msvc120;D:\Entwicklung\VC\sied3\dependency\glew\bin\Release\Win32;D:\Entwicklung\VC\sied3\dependency\glew\lib\Release\Win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -61,7 +61,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>OpenGL32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OpenGL32.lib;glfw3.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

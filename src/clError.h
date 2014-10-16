@@ -12,6 +12,7 @@ public:
 	clError(const char * className);
 	~clError();
 	void AddError(const char * errorString, ...);
+	void AddPlanText(const char * debugText);
 	void AddDebug(const char * debugString, ...);
 };
 

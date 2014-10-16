@@ -196,6 +196,29 @@ void clOpenGLTexturesHelper::loadObjectTextureFromGFX(ty_TextureObject * dest, c
 
 
 //-------------------------------------//
+bool clOpenGLTexturesHelper::checkForGlShaderError(GLuint shaderProgram, const char * errorText)
+{
+	static char GL_Error_text[1024];
+
+	int  bufferLen = 0;
+	glGetShaderiv(shaderProgram, GL_INFO_LOG_LENGTH, &bufferLen);
+
+	if (bufferLen <= 1) return false;
+	
+	if (bufferLen > sizeof(GL_Error_text)) bufferLen = sizeof(GL_Error_text);
+
+	glGetShaderInfoLog(shaderProgram, sizeof(GL_Error_text), &bufferLen, GL_Error_text);
+	
+
+
+	getInstance().m_error.AddError("GlShaderError at %s", errorText);
+	getInstance().m_error.AddPlanText(GL_Error_text);
+
+	return true;
+}
+
+
+//-------------------------------------//
 bool clOpenGLTexturesHelper::checkForGlError(const char * errorText)
 {
 	int err = glGetError();

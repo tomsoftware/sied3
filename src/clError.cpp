@@ -19,6 +19,11 @@ void clError::AddError(const char * errorString, ...)
 	va_end(args);
 }
 
+void clError::AddPlanText(const char * debugText)
+{
+	printf("%s", debugText);
+	printf("\n");
+}
 
 void clError::AddDebug(const char * debugString, ...)
 {
