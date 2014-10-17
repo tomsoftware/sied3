@@ -365,7 +365,12 @@ void drawMap(int posX, int posY)
 
 	glBindTexture(GL_TEXTURE_2D, m_LandscapeText->getGLTextureId());
 
+
+	glUseProgram(m_shader_Program);
+
 	glUniform1f(m_brightness, 1);
+
+
 
 	glBegin(GL_TRIANGLES);
 
@@ -448,13 +453,10 @@ void drawMap(int posX, int posY)
 
 					if (l->textureType != clLandscapeTextures::enumTextureType::TEXTURE_TYPE_NOT_FOUND)
 					{
-						if (l->gradientA != chGrad)
-						{
-							chGrad = l->gradientA;
-							if (!m_useHeight) chGrad = 0;
-							float color = GRADIENT_COLOR[chGrad];
-							glColor3f(color, color, color);
-						}
+
+							
+
+
 
 						//--      1 --- 4  ^
 						//--     / \ B /   |
@@ -464,36 +466,49 @@ void drawMap(int posX, int posY)
 						////// A /////
 						//-- ->1
 
+						float color = GRADIENT_COLOR[chGrad = l->gradientA1];
+						glColor3f(color, color, color);
+
 						glTexCoord2f(textX1 + textSizeWidthHalf, textY1 + textSizeHeight);
 						glVertex3i(outX + 8, outY + YSTEP + H1, 0);
 
 						//-- ->2
+						color = GRADIENT_COLOR[chGrad = l->gradientA2];
+						glColor3f(color, color, color);
+
 						glTexCoord2f(textX1, textY1);
 						glVertex3i(outX, outY + H2, 0);
 
+	
 						//-- ->3
+						color = GRADIENT_COLOR[chGrad = l->gradientA3];
+						glColor3f(color, color, color);
+
 						glTexCoord2f(textX1 + textSizeWidth, textY1);
 						glVertex3i(outX + 16, outY + H3, 0);
 
 
-						if (l->gradientB != chGrad)
-						{
-							chGrad = l->gradientB;
-							if (!m_useHeight) chGrad = 0;
-							float color = GRADIENT_COLOR[chGrad];
-							glColor3f(color, color, color);
-						}
+
 
 						////// B /////
 						//-- ->1
+						color = GRADIENT_COLOR[chGrad = l->gradientA1];
+						glColor3f(color, color, color);
+
 						glTexCoord2f(textX2, textY2 + textSizeHeight);
 						glVertex3i(outX + 8, outY + YSTEP + H1, 0);
 
 						//-- ->3
+						color = GRADIENT_COLOR[chGrad = l->gradientA3];
+						glColor3f(color, color, color);
+
 						glTexCoord2f(textX2 + textSizeWidthHalf, textY2);
 						glVertex3i(outX + 16, outY + H3, 0);
 
 						//-- ->4
+						color = GRADIENT_COLOR[chGrad = l->gradientA4];
+						glColor3f(color, color, color);
+
 						glTexCoord2f(textX2 + textSizeWidth, textY2 + textSizeHeight);
 						glVertex3i(outX + 8 + 16, outY + YSTEP + H4, 0);
 					}
@@ -504,11 +519,13 @@ void drawMap(int posX, int posY)
 		outY += YSTEP;
 	}
 
-	glColor3f(0.5f, 0.5f, 0.5f);
+	glColor3f(1,1,1);
 
 	glEnd();
 	glDisable(GL_TEXTURE_2D);
 
+	//- disable shader
+	glUseProgram(0);
 }
 
 
@@ -548,6 +565,7 @@ void drawMapObjects(int posX, int posY)
 					int v = *(pRowData + sumX);
 
 					int obj = (v >> 16) & 0xFF;
+					int teraH = v & 0xFF;
 
 					if ((obj != 0) && (txObjects[obj].texture != NULL))
 					{
@@ -562,7 +580,7 @@ void drawMapObjects(int posX, int posY)
 
 
 						int curX = txObjects[obj].xRel + outX;
-						int curY = txObjects[obj].yRel + outY + txObjects[obj].height;
+						int curY = -txObjects[obj].yRel + outY - txObjects[obj].height - teraH;
 						int curW = txObjects[obj].width;
 						int curH = txObjects[obj].height;
 
@@ -639,10 +657,10 @@ enumGradient getGradientB(unsigned char H1, unsigned char H2, unsigned char H3)
 	//--           H2  
 	//--        [South]
 	if ((H1 < H3) && (H3 < H2)) return enumGradient::GRADIENT_WEST_NORTH;
-	if ((H3 < H2) && (H2 < H1)) return enumGradient::GRADIENT_NORTH_EAST;
+	if ((H3 < H2) && (H2 < H1)) return enumGradient::GRADIENT_EAST;
 	if ((H2 < H1) && (H1 < H3)) return enumGradient::GRADIENT_SOUTH_WEST;
 
-	if ((H1 < H2) && (H2 < H3)) return enumGradient::GRADIENT_SOUTH_WEST;
+	if ((H1 < H2) && (H2 < H3)) return enumGradient::GRADIENT_WEST;
 	if ((H2 < H3) && (H3 < H1)) return enumGradient::GRADIENT_EAST_SOUTH;
 	if ((H3 < H1) && (H1 < H2)) return enumGradient::GRADIENT_NORTH_EAST;
 
@@ -710,8 +728,8 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 	m_map_landscape = new ty_mapLandscape[bufferSize];
 
 	ty_mapLandscape * pMapPos = &m_map_landscape[0];
-	unsigned int * pNeighbourN4 = &m_map_AraeHeightObject[0] - m_mapWidth;
-	unsigned int * pNeighbourN3 = &m_map_AraeHeightObject[0];
+	unsigned int * pNeighbourN4 = &m_map_AraeHeightObject[0] - m_mapWidth + 1;
+	unsigned int * pNeighbourN3 = &m_map_AraeHeightObject[0]+1;
 	
 	float texWidth = 1.0f / m_LandscapeText->getWidth();
 	float texHeight = 1.0f / m_LandscapeText->getHeight();
@@ -761,8 +779,8 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 
 		
 		//- get gradient of the triangles
-		pMapPos->gradientA = getGradientA(H1, H2, H3);
-		pMapPos->gradientB = getGradientB(H1, H3, H4);
+		pMapPos->gradientA2 = getGradientA(H1, H2, H3);
+		//pMapPos->gradientB = getGradientB(H1, H3, H4);
 
 
 		pTrea = m_LandscapeText->getTriangleTextureInformation(N1, N2, N3);
@@ -818,6 +836,39 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 		pMapPos++;
 
 	}
+
+
+	//----------------------------------//
+	//- cache gradient for every map point
+	pMapPos = &m_map_landscape[0];
+	ty_mapLandscape * pMapPosN4 = &m_map_landscape[0] - m_mapWidth + 1;
+	ty_mapLandscape * pMapPosN3 = &m_map_landscape[0] + 1;
+
+	N1 = N2 = N3 = N4 = 0;
+
+	for (int i = 0; i < bufferSize-1; i++)
+	{
+		//- ignore first row
+		if (i > m_mapWidth)
+		{
+			N1 = N4;
+			N2 = N3;
+			N4 = pMapPosN4->gradientA2; 
+			N3 = pMapPosN3->gradientA2; //- remember: is one step befor [pMapPos]
+
+		}
+
+		pMapPos->gradientA1 = N1;
+		pMapPos->gradientA2 = N2;
+		pMapPos->gradientA3 = N3;
+		pMapPos->gradientA4 = N4;
+
+		pMapPosN4++;
+		pMapPosN3++;
+		pMapPos++;
+
+	}
+	
 
 }
 
@@ -919,7 +970,7 @@ void initShader()
 	//clOpenGLTexturesHelper::checkForGlError("glLinkProgram(m_shader_Program)");
 	clOpenGLTexturesHelper::checkForGlShaderError(m_pixle_shader, "glAttachShader(m_shader_Program, m_pixle_shader)");
 
-	glUseProgram(m_shader_Program);
+
 	m_brightness = glGetUniformLocation(m_shader_Program, "r_brightness");
 	clOpenGLTexturesHelper::checkForGlError("glGetUniformLocation(r_brightness)");
 }

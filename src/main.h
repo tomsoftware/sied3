@@ -134,9 +134,13 @@ struct ty_mapLandscape
 	unsigned char AraeHeight3;  //- height of point
 	unsigned char AraeHeight4;  //- height of point
 
-	unsigned char gradientA;
-	unsigned char gradientB;
+	//unsigned char gradientA;
+	//unsigned char gradientB;
 
+	unsigned char gradientA1;
+	unsigned char gradientA2;
+	unsigned char gradientA3;
+	unsigned char gradientA4;
 
 	clLandscapeTextures::enumTextureType textureType;
 };
