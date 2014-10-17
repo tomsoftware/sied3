@@ -9,8 +9,8 @@ int main(int argc, char* argv[])
 	loadResource();
 
 	//loadMap("texture.map", clMapFileReader::enum_map_folders::FOLDER_USER);
-	//loadMap("448_DEMO.map", clMapFileReader::enum_map_folders::FOLDER_USER);
-	loadMap("hoch.map", clMapFileReader::enum_map_folders::FOLDER_USER);
+	loadMap("448_DEMO.map", clMapFileReader::enum_map_folders::FOLDER_USER);
+	//loadMap("hoch.map", clMapFileReader::enum_map_folders::FOLDER_USER);
 	//loadMap( "flach.map", clMapFileReader::enum_map_folders::FOLDER_USER);
 	//loadMap("wueste_gras_wueste.map", clMapFileReader::enum_map_folders::FOLDER_USER);
 
@@ -347,6 +347,7 @@ void drawMap(int posX, int posY)
 	float textY2 = 0.f;
 	int outX = 0;
 	int outY = 0;
+	unsigned char chGrad = enumGradient::GRADIENT_NONE;
 
 	float texWidth = (float)m_LandscapeText->getWidth();
 	float texHeight = (float)m_LandscapeText->getHeight();
@@ -369,7 +370,7 @@ void drawMap(int posX, int posY)
 	glBegin(GL_TRIANGLES);
 
 
-
+	glColor3f(0.5f, 0.5f, 0.5f);
 
 	//- the heigh of one line
 	static const int YSTEP = (16 * 9 / 8) / 2;
@@ -394,14 +395,19 @@ void drawMap(int posX, int posY)
 					//- for debugging we can switch one map-types to white 
 					if (l->AraeType == m_marker)
 					{
-						l =& m_markerType;
-					}
-					else
-					{
-						l = l;
-					}
+						textX1 = m_markerType.textureA_var1_X;
+						textY1 = m_markerType.textureA_var1_Y;
 
-					if ((l->textureType == clLandscapeTextures::enumTextureType::TEXTURE_TYPE_SINGEL))
+						textX2 = m_markerType.textureB_var1_X;
+						textY2 = m_markerType.textureB_var1_Y;
+
+						textX1 = m_markerType.textureA_var2_X;
+						textY1 = m_markerType.textureA_var2_Y;
+
+						textX2 = m_markerType.textureB_var2_X;
+						textY2 = m_markerType.textureB_var2_Y;
+					}
+					else if ((l->textureType == clLandscapeTextures::enumTextureType::TEXTURE_TYPE_SINGEL))
 					{
 						if ((sumX + sumY / 2) % 2)
 						{
@@ -442,16 +448,13 @@ void drawMap(int posX, int posY)
 
 					if (l->textureType != clLandscapeTextures::enumTextureType::TEXTURE_TYPE_NOT_FOUND)
 					{
-						if (H1 > H2)
+						if (l->gradientA != chGrad)
 						{
-							glColor4f(0.6, 0.6, 0.6, 0.6);
+							chGrad = l->gradientA;
+							if (!m_useHeight) chGrad = 0;
+							float color = GRADIENT_COLOR[chGrad];
+							glColor3f(color, color, color);
 						}
-						else
-						{
-							glColor4f(0.5, 0.5, 0.5, 0.5);
-						}
-						
-
 
 						//--      1 --- 4  ^
 						//--     / \ B /   |
@@ -472,6 +475,15 @@ void drawMap(int posX, int posY)
 						glTexCoord2f(textX1 + textSizeWidth, textY1);
 						glVertex3i(outX + 16, outY + H3, 0);
 
+
+						if (l->gradientB != chGrad)
+						{
+							chGrad = l->gradientB;
+							if (!m_useHeight) chGrad = 0;
+							float color = GRADIENT_COLOR[chGrad];
+							glColor3f(color, color, color);
+						}
+
 						////// B /////
 						//-- ->1
 						glTexCoord2f(textX2, textY2 + textSizeHeight);
@@ -491,6 +503,8 @@ void drawMap(int posX, int posY)
 		}
 		outY += YSTEP;
 	}
+
+	glColor3f(0.5f, 0.5f, 0.5f);
 
 	glEnd();
 	glDisable(GL_TEXTURE_2D);
@@ -584,6 +598,64 @@ void drawMapObjects(int posX, int posY)
 }
 
 
+//-------------------------------------//
+enumGradient getGradientA(unsigned char H1, unsigned char H2, unsigned char H3)
+{
+	//--        [North]
+	//--          H1 
+	//-- [West]  /  \  [East]
+	//--        / A  \ 
+	//--       H2 --- H3   
+	//--        [South]
+	if ((H1 < H3) && (H3 < H2)) return enumGradient::GRADIENT_NORTH_EAST;
+	if ((H3 < H2) && (H2 < H1)) return enumGradient::GRADIENT_EAST_SOUTH;
+	if ((H2 < H1) && (H1 < H3)) return enumGradient::GRADIENT_WEST;
+
+	if ((H1 < H2) && (H2 < H3)) return enumGradient::GRADIENT_WEST_NORTH;
+	if ((H2 < H3) && (H3 < H1)) return enumGradient::GRADIENT_SOUTH_WEST;
+	if ((H3 < H1) && (H1 < H2)) return enumGradient::GRADIENT_EAST;
+	
+
+
+	if ((H2 == H3) && (H1 > H2)) return enumGradient::GRADIENT_SOUTH;
+	if ((H2 == H3) && (H1 < H2)) return enumGradient::GRADIENT_NORTH;
+	if ((H2 == H1) && (H3 > H1)) return enumGradient::GRADIENT_WEST_NORTH;
+	if ((H2 == H1) && (H3 < H1)) return enumGradient::GRADIENT_EAST_SOUTH;
+	if ((H1 == H3) && (H2 > H1)) return enumGradient::GRADIENT_NORTH_EAST;
+	if ((H1 == H3) && (H2 < H1)) return enumGradient::GRADIENT_SOUTH_WEST;
+	if ((H1 == H2) && (H2 == H3))return enumGradient::GRADIENT_NONE;
+
+	return enumGradient::GRADIENT_NONE;
+}
+
+
+//-------------------------------------//
+enumGradient getGradientB(unsigned char H1, unsigned char H2, unsigned char H3)
+{
+	//--        [North]
+	//--       H1 --- H3 
+	//--         \ B  /    
+	//--  [West]  \  /  [East]
+	//--           H2  
+	//--        [South]
+	if ((H1 < H3) && (H3 < H2)) return enumGradient::GRADIENT_WEST_NORTH;
+	if ((H3 < H2) && (H2 < H1)) return enumGradient::GRADIENT_NORTH_EAST;
+	if ((H2 < H1) && (H1 < H3)) return enumGradient::GRADIENT_SOUTH_WEST;
+
+	if ((H1 < H2) && (H2 < H3)) return enumGradient::GRADIENT_SOUTH_WEST;
+	if ((H2 < H3) && (H3 < H1)) return enumGradient::GRADIENT_EAST_SOUTH;
+	if ((H3 < H1) && (H1 < H2)) return enumGradient::GRADIENT_NORTH_EAST;
+
+	if ((H1 == H3) && (H1 > H2)) return enumGradient::GRADIENT_SOUTH;
+	if ((H1 == H3) && (H1 < H2)) return enumGradient::GRADIENT_NORTH;
+	if ((H2 == H3) && (H3 > H1)) return enumGradient::GRADIENT_WEST_NORTH;
+	if ((H2 == H3) && (H3 < H1)) return enumGradient::GRADIENT_EAST_SOUTH;
+	if ((H1 == H2) && (H1 > H3)) return enumGradient::GRADIENT_NORTH_EAST;
+	if ((H1 == H2) && (H1 < H3)) return enumGradient::GRADIENT_SOUTH_WEST;
+	if ((H1 == H2) && (H2 == H3))return enumGradient::GRADIENT_NONE;
+
+	return enumGradient::GRADIENT_NONE;
+}
 
 
 //-------------------------------------//
@@ -686,6 +758,12 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 		pMapPos->AraeHeight1 = H1;
 		pMapPos->AraeHeight3 = H3;
 		pMapPos->AraeHeight4 = H4;
+
+		
+		//- get gradient of the triangles
+		pMapPos->gradientA = getGradientA(H1, H2, H3);
+		pMapPos->gradientB = getGradientB(H1, H3, H4);
+
 
 		pTrea = m_LandscapeText->getTriangleTextureInformation(N1, N2, N3);
 
@@ -792,7 +870,7 @@ void initShader()
 		uniform sampler2D tex;
 		void main()
 		{
-			gl_FragColor = texture2D(tex, vec2( gl_TexCoord[0] ))*gl_Color*2; //*r_brightness
+			gl_FragColor = texture2D(tex, vec2( gl_TexCoord[0] ))*gl_Color*2.0; //*r_brightness
 		}
 	);
 
@@ -998,7 +1076,7 @@ void loadResource()
 	//- degugging Colors
 	float texWidth = 1.0f / m_LandscapeText->getWidth();
 	float texHeight = 1.0f / m_LandscapeText->getHeight();
-	clLandscapeTextures::tyTriangleTexture * pTrea = m_LandscapeText->AddTexturePlainColored32x32(255, 255, 255, 255);
+	clLandscapeTextures::tyTriangleTexture * pTrea = m_LandscapeText->AddTexturePlainColored32x32(128, 128, 128, 255);
 	m_markerType.AraeHeight = 0;
 	m_markerType.textureType = pTrea->texType;
 	m_markerType.textureA_var1_X = texWidth * pTrea->up_var1_x;

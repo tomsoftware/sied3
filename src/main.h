@@ -29,8 +29,20 @@ struct ty_Animation
 };
 
 
+enum enumGradient
+{
+	GRADIENT_NONE,
+	GRADIENT_NORTH,
+	GRADIENT_NORTH_EAST,
+	GRADIENT_EAST,
+	GRADIENT_EAST_SOUTH,
+	GRADIENT_SOUTH,
+	GRADIENT_SOUTH_WEST,
+	GRADIENT_WEST,
+	GRADIENT_WEST_NORTH,
+};
 
-
+float GRADIENT_COLOR[] = { 0.5f, 0.3f, 0.3f, 0.5f, 0.5f, 0.7f, 0.7f, 0.5f, 0.5f };
 
 void toPerspective();
 void toOrtho();
@@ -122,6 +134,10 @@ struct ty_mapLandscape
 	unsigned char AraeHeight3;  //- height of point
 	unsigned char AraeHeight4;  //- height of point
 
+	unsigned char gradientA;
+	unsigned char gradientB;
+
+
 	clLandscapeTextures::enumTextureType textureType;
 };
 
@@ -157,6 +173,8 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 static void mouse_click_callback(GLFWwindow *window, int button, int action, int mods);
 static void mouse_move_callback(GLFWwindow *window, double xpos, double ypos);
 
+enumGradient getGradientA(unsigned char H1, unsigned char H2, unsigned char H3);
+enumGradient getGradientB(unsigned char H1, unsigned char H2, unsigned char H3);
 
 void initShader();
 //void rendershadertest();

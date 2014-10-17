@@ -3,13 +3,16 @@ Sied3
 
 Features
 --------
-* read Siedler/Settlers 3 Map Files {area, height, decoration objects, ...}
+* read Siedler 3/Settlers 3 Map Files {area, height, decoration objects, ...}
 * read Siedler/Settlers GFX Files {images of objects, shadows, torso, pallets, animation-information}
-* render map (no height level, not all patters)
+* render original settlers map file (some glitches)
 * render animations
 
 Status
 ------
+2014-10-17
+![example1](examples/mapview_2014_10_17.png)
+
 2014-10-14
 ![example1](examples/mapview_2014_10_14.png)
 

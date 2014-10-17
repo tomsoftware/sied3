@@ -27,6 +27,8 @@ public:
 	};
 	*/
 
+
+
 	enum enumTextureType
 	{
 		TEXTURE_TYPE_NOT_FOUND = 0,
