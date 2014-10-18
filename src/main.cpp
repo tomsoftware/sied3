@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
 	//loadMap("leer1.map", clMapFileReader::enum_map_folders::FOLDER_USER);
 
 
-	initShader();
+	loadShader();
 
 	gameLoop();
 
@@ -118,78 +118,6 @@ void setUpCam()
 
 
 
-//-------------------------------------//
-bool eventHandler()
-{
-	//glfwPollEvents();
-
-	//if (glfwWindowShouldClose(m_window)) return false;
-
-	//if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) return false;
-
-
-
-	/*
-
-		if (event.type == SDL_MOUSEMOTION)
-		{
-			if ((event.motion.state & SDL_BUTTON_LMASK) == SDL_BUTTON_LMASK)
-			{
-				m_mapPosX += event.motion.xrel;
-				m_mapPosY += event.motion.yrel;
-
-				if (m_mapPosX < 0) m_mapPosX = 0;
-				if (m_mapPosY < 0) m_mapPosY = 0;
-
-				//SDL_WarpMouseInWindow(m_sdl_window, event.motion.x - event.motion.xrel, event.motion.y - event.motion.yrel);
-			}
-			else
-			{
-				m_MouseDownStartX = -1;
-				m_MouseDownStartY = -1;
-			}
-		}
-
-		if (event.type == SDL_KEYDOWN)
-		{
-			switch (event.key.keysym.sym)
-			{
-			case SDLK_KP_MINUS:
-				AnimationID--;
-				if (AnimationID < 0) AnimationID = 0;
-				m_GameLoopCounter = 0;
-				m_error.AddDebug("AnimationID: %i", AnimationID);
-				break;
-			case SDLK_KP_PLUS:
-				m_GameLoopCounter = 0;
-				AnimationID++;
-				m_error.AddDebug("AnimationID: %i", AnimationID);
-				break;
-			case SDLK_PAGEUP:
-				m_GameLoopCounter = 0;
-				BuildingID++;
-				m_error.AddDebug("BuildingID: %i", BuildingID);
-				break;
-			case SDLK_PAGEDOWN:
-				m_GameLoopCounter  = 0;
-				BuildingID--;
-				if (BuildingID < 0) BuildingID = 0;
-				m_error.AddDebug("BuildingID: %i", BuildingID);
-				break;
-
-			case SDLK_ESCAPE:
-				return false;
-				break;
-			}
-		}
-	}
-	*/
-
-	return true;
-}
-
-
-
 
 //-------------------------------------//
 void gameLoop()
@@ -197,7 +125,7 @@ void gameLoop()
 	bool gameRunning = true;
 	
 	
-	int m_GameLoopCounter=0;
+	m_GameLoopCounter=0;
 	int scale = 1;
 	int x0 = 200;
 	int y0 = 150;
@@ -207,8 +135,6 @@ void gameLoop()
 
 	while (gameRunning)
 	{
-		gameRunning = eventHandler();
-
 		//- set up View Point
 		setUpCam();
 
@@ -220,8 +146,6 @@ void gameLoop()
 		drawMapObjects(m_mapPosX, m_mapPosY);
 
 		
-
-		//rendershadertest();
 
 		/*
 		//////////////////////
@@ -310,7 +234,7 @@ void gameLoop()
 		glfwPollEvents();
 
 
-
+		//- ToDo: Loop count by time
 		m_GameLoopCounter++;
 		//sleep(1000);
 	}
@@ -341,19 +265,24 @@ void drawObject(clGFXFile::GFX_ObjectTexture *texture, clGFXFile::GFX_ObjectSurf
 //-------------------------------------//
 void drawMap(int posX, int posY)
 {
+	//- texture position in textureAtlas
 	float textX1 = 0.f;
 	float textY1 = 0.f;
 	float textX2 = 0.f;
 	float textY2 = 0.f;
+
+	//- size of map texture triangles
+	const float textSizeWidth = 16.0f / m_LandscapeText->getWidth();
+	const float textSizeHeight = 16.0f / m_LandscapeText->getHeight();
+	const float textSizeWidthHalf = textSizeWidth * 0.5f;
+
+	//- screen coordinates for output
 	int outX = 0;
 	int outY = 0;
-	unsigned char chGrad = enumGradient::GRADIENT_NONE;
 
-	float texWidth = (float)m_LandscapeText->getWidth();
-	float texHeight = (float)m_LandscapeText->getHeight();
-	const float textSizeWidth = 16.0f / texWidth;
-	const float textSizeHeight = 16.0f / texHeight;
-	const float textSizeWidthHalf = textSizeWidth * 0.5f;
+	//- the heigh of one line
+	static const int YSTEP = (16 * 9 / 8) / 2;
+
 
 	//- setup OpenGL
 	glMatrixMode(GL_MODELVIEW);
@@ -363,22 +292,17 @@ void drawMap(int posX, int posY)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glLoadIdentity();
 
+	//- use the texture atlas Texture
 	glBindTexture(GL_TEXTURE_2D, m_LandscapeText->getGLTextureId());
 
-
-	glUseProgram(m_shader_Program);
-
-	glUniform1f(m_brightness, 1);
+	//- use the map-shader
+	m_map_shader.activate();
 
 
 
 	glBegin(GL_TRIANGLES);
 
 
-	glColor3f(0.5f, 0.5f, 0.5f);
-
-	//- the heigh of one line
-	static const int YSTEP = (16 * 9 / 8) / 2;
 
 	for (int y = 0; y < 68; y++)
 	{
@@ -454,10 +378,6 @@ void drawMap(int posX, int posY)
 					if (l->textureType != clLandscapeTextures::enumTextureType::TEXTURE_TYPE_NOT_FOUND)
 					{
 
-							
-
-
-
 						//--      1 --- 4  ^
 						//--     / \ B /   |
 						//--    / A \ /    |YSTEP
@@ -466,14 +386,14 @@ void drawMap(int posX, int posY)
 						////// A /////
 						//-- ->1
 
-						float color = GRADIENT_COLOR[chGrad = l->gradientA1];
+						float color = GRADIENT_COLOR[l->gradientA1];
 						glColor3f(color, color, color);
 
 						glTexCoord2f(textX1 + textSizeWidthHalf, textY1 + textSizeHeight);
 						glVertex3i(outX + 8, outY + YSTEP + H1, 0);
 
 						//-- ->2
-						color = GRADIENT_COLOR[chGrad = l->gradientA2];
+						color = GRADIENT_COLOR[l->gradientA2];
 						glColor3f(color, color, color);
 
 						glTexCoord2f(textX1, textY1);
@@ -481,7 +401,7 @@ void drawMap(int posX, int posY)
 
 	
 						//-- ->3
-						color = GRADIENT_COLOR[chGrad = l->gradientA3];
+						color = GRADIENT_COLOR[l->gradientA3];
 						glColor3f(color, color, color);
 
 						glTexCoord2f(textX1 + textSizeWidth, textY1);
@@ -492,21 +412,21 @@ void drawMap(int posX, int posY)
 
 						////// B /////
 						//-- ->1
-						color = GRADIENT_COLOR[chGrad = l->gradientA1];
+						color = GRADIENT_COLOR[l->gradientA1];
 						glColor3f(color, color, color);
 
 						glTexCoord2f(textX2, textY2 + textSizeHeight);
 						glVertex3i(outX + 8, outY + YSTEP + H1, 0);
 
 						//-- ->3
-						color = GRADIENT_COLOR[chGrad = l->gradientA3];
+						color = GRADIENT_COLOR[l->gradientA3];
 						glColor3f(color, color, color);
 
 						glTexCoord2f(textX2 + textSizeWidthHalf, textY2);
 						glVertex3i(outX + 16, outY + H3, 0);
 
 						//-- ->4
-						color = GRADIENT_COLOR[chGrad = l->gradientA4];
+						color = GRADIENT_COLOR[l->gradientA4];
 						glColor3f(color, color, color);
 
 						glTexCoord2f(textX2 + textSizeWidth, textY2 + textSizeHeight);
@@ -519,19 +439,26 @@ void drawMap(int posX, int posY)
 		outY += YSTEP;
 	}
 
+	//- disable/reset color
 	glColor3f(1,1,1);
 
 	glEnd();
 	glDisable(GL_TEXTURE_2D);
 
-	//- disable shader
-	glUseProgram(0);
+	//- disable map-shader
+	m_map_shader.disable();
 }
+
 
 
 //-------------------------------------//
 void drawMapObjects(int posX, int posY)
 {
+	//- screen position for Object
+	static const int YSTEP = (16 * 9 / 8) / 2;
+	int outX = 0;
+	int outY = YSTEP * 68;
+
 
 	glMatrixMode(GL_MODELVIEW);
 	glEnable(GL_TEXTURE_2D);
@@ -540,12 +467,14 @@ void drawMapObjects(int posX, int posY)
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	glBindTexture(GL_TEXTURE_2D, m_ObjectText->getGLTextureId());
 
-	static const int YSTEP = (16 * 9 / 8) / 2;
-	int outX = 0;
-	int outY = YSTEP * 68;
 
 	
+	int gameLoopPos = m_GameLoopCounter;
+
+
+	glBegin(GL_QUADS);
 
 	for (int y = 68; y > 0; y--)
 	{
@@ -564,45 +493,67 @@ void drawMapObjects(int posX, int posY)
 				{
 					int v = *(pRowData + sumX);
 
-					int obj = (v >> 16) & 0xFF;
+					int objID = (v >> 16) & 0xFF;
 					int teraH = v & 0xFF;
 
-					if ((obj != 0) && (txObjects[obj].texture != NULL))
+					if (objID != 0)
 					{
+						clObjectTextures::ty_TextureObject * obj = &txObjects[objID];
 
-						//--   1 --- 4
-						//--   |     |
-						//--   |     |
-						//--   2 --- 3
+						if (obj->firstTexture != NULL)
+						{
+							clObjectTextures::ty_Objects * textOb;
 
-						glBindTexture(GL_TEXTURE_2D, txObjects[obj].texture);
-						glBegin(GL_QUADS);
-
-
-						int curX = txObjects[obj].xRel + outX;
-						int curY = -txObjects[obj].yRel + outY - txObjects[obj].height - teraH;
-						int curW = txObjects[obj].width;
-						int curH = txObjects[obj].height;
-
-						////// A /////
-						//-- ->1
-						glTexCoord2f(0, 0);
-						glVertex2i(curX, curY + curH);
-
-						//-- ->2
-						glTexCoord2f(0, 1);
-						glVertex2i(curX, curY);
-
-						//-- ->3
-						glTexCoord2f(1, 1);
-						glVertex2i(curX + curW, curY);
-
-						//-- ->4
-						glTexCoord2f(1, 0);
-						glVertex2i(curX + curW, curY + curH);
+							int seqCount = obj->frameCount;
+							if (seqCount > 1)
+							{
+								textOb = obj->firstTexture + ((gameLoopPos/2 + sumX + sumY / 2) % seqCount);
+							}
+							else
+							{
+								textOb = obj->firstTexture;
+							}
 
 
-						glEnd();
+							//--   1 --- 4
+							//--   |     |
+							//--   |     |
+							//--   2 --- 3
+
+							int curX = outX + textOb->xRel;
+							int curY = outY - textOb->yRel - textOb->height - teraH;
+							int curW = textOb->width;
+							int curH = textOb->height;
+
+							float textX = textOb->texture_x;
+							float textY = textOb->texture_y;
+							float textRight = textOb->texture_r;
+							float textButton = textOb->texture_b;
+
+							////// A /////
+							//-- ->1
+							glTexCoord2f(textX, textY);
+							glVertex2i(curX, curY);
+
+							//-- ->2
+							glTexCoord2f(textX, textButton);
+							glVertex2i(curX, curY + curH);
+
+							//-- ->3
+							glTexCoord2f(textRight, textButton);
+							glVertex2i(curX + curW, curY + curH);
+
+							//-- ->4
+							glTexCoord2f(textRight, textY);
+							glVertex2i(curX + curW, curY);
+
+
+
+						}
+						else
+						{
+							m_error.AddError("DrawMapObject: objectID not found: %i", objID);
+						}
 					}
 				}
 				outX += 16;
@@ -611,6 +562,7 @@ void drawMapObjects(int posX, int posY)
 		outY -= YSTEP;
 	}
 
+	glEnd();
 
 	glDisable(GL_TEXTURE_2D);
 }
@@ -712,7 +664,7 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 
 	int bufferSize = m_mapWidth*m_mapHeight;
 
-	//- create ne map buffer
+	//- create new map buffer
 	//- MapInfos: AreaType, Height, Object
 	m_map_AraeHeightObject = new unsigned int[bufferSize];
 
@@ -729,7 +681,7 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 
 	ty_mapLandscape * pMapPos = &m_map_landscape[0];
 	unsigned int * pNeighbourN4 = &m_map_AraeHeightObject[0] - m_mapWidth + 1;
-	unsigned int * pNeighbourN3 = &m_map_AraeHeightObject[0]+1;
+	unsigned int * pNeighbourN3 = &m_map_AraeHeightObject[0] + 1;
 	
 	float texWidth = 1.0f / m_LandscapeText->getWidth();
 	float texHeight = 1.0f / m_LandscapeText->getHeight();
@@ -801,12 +753,13 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 			//- this combination is not defined
 			pMapPos->textureType = clLandscapeTextures::enumTextureType::TEXTURE_TYPE_SINGEL;
 
+			//- use error texture
 			pMapPos->textureA_var1_X = m_ErrorType.textureA_var1_X;
 			pMapPos->textureA_var1_Y = m_ErrorType.textureA_var1_Y;
 			pMapPos->textureA_var2_X = m_ErrorType.textureA_var2_X;
 			pMapPos->textureA_var2_Y = m_ErrorType.textureA_var2_Y;
 			
-			m_error.AddError("texture not found: %i %i %i", (int) N1, (int) N2, (int) N3);
+			m_error.AddError("map texture not found: %i %i %i", (int) N1, (int) N2, (int) N3);
 		}
 
 		pTrea = m_LandscapeText->getTriangleTextureInformation(N1, N3, N4);
@@ -822,12 +775,13 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 			//- this combination is not defined
 			pMapPos->textureType = clLandscapeTextures::enumTextureType::TEXTURE_TYPE_SINGEL;
 
+			//- use error texture
 			pMapPos->textureB_var1_X = m_ErrorType.textureB_var1_X;
 			pMapPos->textureB_var1_Y = m_ErrorType.textureB_var1_Y;
 			pMapPos->textureB_var2_X = m_ErrorType.textureB_var2_X;
 			pMapPos->textureB_var2_Y = m_ErrorType.textureB_var2_Y;
 
-			m_error.AddError("texture not found: %i %i %i", (int) N1, (int) N3, (int) N4);
+			m_error.AddError("map texture not found: %i %i %i", (int) N1, (int) N3, (int) N4);
 		}
 
 		
@@ -874,90 +828,42 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 
 
 //-------------------------------------//
+void loadShader()
+{
+	const char* map_shader_source = STRINGIFY(
+		uniform sampler2D tex;
+		void main()
+		{
+			gl_FragColor = texture2D(tex, vec2(gl_TexCoord[0]))*gl_Color*2.0;
+		}
+	);
+
+
+	m_map_shader.addFragmentShader(map_shader_source);
+}
+
 
 
 /*
-void rendershadertest(void)
-{
-	glClear(GL_COLOR_BUFFER_BIT);
-	
-
-	glLoadIdentity();
-	glRotatef(1, 0, angle, angle * .1);
-	glBegin(GL_TRIANGLES);
-	glVertex3f(-1, -.5, 0);
-	glVertex3f(0, 1, 0);
-	glVertex3f(1, 0, 0);
-	glEnd();
-	angle += .02;
-	
-}
-*/
-
 //-------------------------------------//
 void initShader()
 {
-#define STRINGIFY(A) #A
+
 
 	//- Create a shader program
 	m_shader_Program = glCreateProgram();
 
 
 
-	/*
-	const char *f =
-		"varying float x, y, z;"
-		"uniform float r_mod;"
-		"float rand(float s, float r) { return mod(mod(s, r + r_mod) * 112341, 1); }"
-		"void main() {"
-		"	gl_FragColor = vec4(rand(gl_FragCoord.x, x), rand(gl_FragCoord.y, y), rand(gl_FragCoord.z, z), 1);"
-		"}";
-		*/
-
-
-
-	const GLchar* pixle_shader_source = STRINGIFY(
-		//uniform float r_brightness;
-		uniform sampler2D tex;
-		void main()
-		{
-			gl_FragColor = texture2D(tex, vec2( gl_TexCoord[0] ))*gl_Color*2.0; //*r_brightness
-		}
-	);
-
-
-	/*
-		"// Interpolated values from the vertex shaders in vec2 UV;"
-		""
-		"// Ouput data"
-		"out vec3 color;"
-		""
-		"// Values that stay constant for the whole mesh."
-		"uniform sampler2D myTextureSampler;"
-		"void maina(){"
-		"	// Output color = color of the texture at the specified UV"
-		"	color = texture(myTextureSampler, UV).rgb;"
-		"}";
-		*/
-	/*
-	const char *v =
-		"varying float x, y, z;"
-		"void main() {"
-		"	gl_Position = ftransform();"
-		"	x = gl_Position.x; y = gl_Position.y; z = gl_Position.z;"
-		"	x += y; y -= x; z += x - y;"
-		"}";
-		*/
-
 	m_pixle_shader = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(m_pixle_shader, 1, &pixle_shader_source, 0);
 	glCompileShader(m_pixle_shader);
-	//clOpenGLTexturesHelper::checkForGlError("glCompileShader(m_pixle_shader)");
-	clOpenGLTexturesHelper::checkForGlShaderError(m_pixle_shader, "glCompileShader(m_pixle_shader)");
+	//clTexturesLoadHelper::checkForGlError("glCompileShader(m_pixle_shader)");
+	clTexturesLoadHelper::checkForGlShaderError(m_pixle_shader, "glCompileShader(m_pixle_shader)");
 
 
 	glAttachShader(m_shader_Program, m_pixle_shader);
-	clOpenGLTexturesHelper::checkForGlError("glAttachShader(m_shader_Program, m_pixle_shader)");
+	clTexturesLoadHelper::checkForGlError("glAttachShader(m_shader_Program, m_pixle_shader)");
 
 	
 
@@ -967,167 +873,37 @@ void initShader()
 	//glAttachShader(prog, vs);
 
 	glLinkProgram(m_shader_Program);
-	//clOpenGLTexturesHelper::checkForGlError("glLinkProgram(m_shader_Program)");
-	clOpenGLTexturesHelper::checkForGlShaderError(m_pixle_shader, "glAttachShader(m_shader_Program, m_pixle_shader)");
+	//clTexturesLoadHelper::checkForGlError("glLinkProgram(m_shader_Program)");
+	clTexturesLoadHelper::checkForGlShaderError(m_pixle_shader, "glAttachShader(m_shader_Program, m_pixle_shader)");
 
 
 	m_brightness = glGetUniformLocation(m_shader_Program, "r_brightness");
-	clOpenGLTexturesHelper::checkForGlError("glGetUniformLocation(r_brightness)");
+	clTexturesLoadHelper::checkForGlError("glGetUniformLocation(r_brightness)");
 }
+*/
 
 //-------------------------------------//
 void loadResource()
 {
-
-	//- Landscape
+	//---------------------
+	//- load Landscape
 	clGFXFile gfxLand = clGFXFile("Siedler3_00.f8007e01f.dat");
-	//clGFXFile gfxLand = clGFXFile("Siedler3_00.f8007e01f - [sand übergang].dat");
-	
-	int count = gfxLand.getTextureLandscapeCount();
+
+	//- create textur-Atlas and triangle-information-buffer
+	m_LandscapeText = new clLandscapeTextures(128 * 8, 128 * 4, 300);
+
+	//- load map patterns and define triangles
+	clTexturesLoadHelper::load_map_patterns(m_LandscapeText, &gfxLand);
 
 
-	m_LandscapeText = new clLandscapeTextures(128*8, 128*4, 300);
-
-	m_LandscapeText->AddTexturePlane128x128(&gfxLand, 10, 7); //- sea
-	m_LandscapeText->AddTexturePlane128x128(&gfxLand, 0, 16); //- grass
-	m_LandscapeText->AddTexturePlane128x128(&gfxLand, 21, 32); //- rock
-	m_LandscapeText->AddTexturePlane128x128(&gfxLand, 31, 48); //- beach
-	m_LandscapeText->AddTexturePlane128x128(&gfxLand, 18, 64); //- desert
-	m_LandscapeText->AddTexturePlane128x128(&gfxLand, 7, 80); //- swamp
-	m_LandscapeText->AddTexturePlane128x128(&gfxLand, 24, 128); //- polar/ice
-	m_LandscapeText->AddTexturePlane128x128(&gfxLand, 4, 144); //- mud
-
-
-	//- between the different map-textures a blending is created.
-	//- for this a index-table is created containing all known edge-type-combinations
-
-	//- grass <--> desert
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 128, 129, 130, 131, 16, 20); //- grass 16 <-x-> 20 <---> 65 <---> desert 64
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 132, 133, 134, 135, 20, 65); //- grass 16 <---> 20 <-x-> 65 <---> desert 64
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 136, 137, 138, 139, 65, 64); //- grass 16 <---> 20 <---> 65 <---> desert 64
-
-
-	//- see [level 0] <--> see [level 7]
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 84, 85, 86, 87, 0, 1);
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 88, 89, 90, 91, 1, 2);
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 92, 93, 94, 95, 2, 3);
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 96, 97, 98, 99, 3, 4);
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 100, 101, 102, 103, 4, 5);
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 104, 105, 106, 107, 5, 6);
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 108, 109, 110, 111, 6, 7);
-
-
-	//- sea constant (no Gradient) level
-	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 17, 0);
-	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 16, 1);
-	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 15, 2);
-	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 14, 3);
-	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 13, 4);
-	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 12, 5);
-	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 11, 6);
-
-	//- sea to beach
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 37, 38, 39, 40, 48, 0);
-
-	//- beach to grass
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 112, 113, 114, 115, 48, 16);
-
-	//- [grass] 16 -> 17 -> 33 -> 32 [rock]
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 116, 117, 118, 119, 16, 17);
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 120, 121, 122, 123, 17, 33);
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 124, 125, 126, 127, 33, 32);
-
-	//- [rock]
-	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 22, 33);
-	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 23, 17);
-
-
-	//- [grass] 16 -> 23 -> 145 -> 144 [mud]
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 140, 141, 142, 143, 16, 23);
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 144, 145, 146, 147, 23, 145);
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 148, 149, 150, 151, 145, 144);
-
-
-	//- [rock] 32 -> 35 -> 129 -> 128 [ice]
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 156, 157, 158, 159, 32, 35);
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 160, 161, 162, 163, 35, 129);
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 164, 165, 166, 167, 129, 128);
-	//---> ?? 27,28,29,30
-
-	//- [ice]
-	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 25, 35);
-	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 26, 129);
-
-
-	//-  [grass] 16 -> 21 -> 81 -> 80 [swamp]
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 201, 202, 203, 204, 16, 21);
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 205, 206, 207, 208, 21, 81);
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 209, 210, 211, 212, 81, 80);
-
-	//- [swamp]
-	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 8, 21);
-	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 9, 81);
-
-	//- desert
-	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 19, 65);
-	m_LandscapeText->AddTexturePlane32x32(&gfxLand, 20, 20);
-
-
-	//- grass -> river
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 52, 53, 54, 55, 16, 96);
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 56, 57, 58, 59, 16, 97);
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 60, 61, 62, 63, 16, 98);
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 64, 65, 66, 67, 16, 99);
-
-	//- beach [48] -> river
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 68, 69, 70, 71, 48, 96);
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 72, 73, 74, 75, 48, 97);
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 76, 77, 78, 79, 48, 98);
-	m_LandscapeText->AddTextureHexagon(&gfxLand, 80, 81, 82, 83, 48, 99);
-
-	/*
-	//- riffer -> sea
-	m_LandscapeText->AddTextureMapping(0, 0, 99, 0, 0, 0);
-	m_LandscapeText->AddTextureMapping(0, 0, 96, 0, 0, 0);
-	//m_LandscapeText->AddTextureHexagon(&gfxLand, 84, 85, 86, 87, 0, 99);
-	//m_LandscapeText->AddTextureHexagon(&gfxLand, 84, 85, 86, 87, 0, 96);
-
-
-	m_LandscapeText->AddTextureMapping(16, 96, 97, 16, 97, 97);
-	m_LandscapeText->AddTextureMapping(16, 97, 96, 16, 97, 97);
-
-	m_LandscapeText->AddTextureMapping(16, 96, 99, 16, 98, 98);
-	m_LandscapeText->AddTextureMapping(16, 99, 96, 16, 98, 98);
-
-	m_LandscapeText->AddTextureMapping(16, 97, 98, 16, 98, 98);
-	m_LandscapeText->AddTextureMapping(16, 98, 99, 16, 99, 99);
-
-	m_LandscapeText->AddTextureMapping(0, 96, 99, 0, 0, 0);
-	m_LandscapeText->AddTextureMapping(0, 97, 99, 0, 0, 0);
-	m_LandscapeText->AddTextureMapping(0, 98, 99, 0, 0, 0);
-	m_LandscapeText->AddTextureMapping(0, 99, 99, 0, 0, 0);
-	m_LandscapeText->AddTextureMapping(96, 0, 99, 0, 0, 0);
-	m_LandscapeText->AddTextureMapping(97, 0, 99, 0, 0, 0);
-	m_LandscapeText->AddTextureMapping(98, 0, 99, 0, 0, 0);
-	m_LandscapeText->AddTextureMapping(99, 0, 99, 0, 0, 0);
-
-
-
-	m_LandscapeText->AddTextureMapping(48, 96, 0, 48, 0, 0);
-	m_LandscapeText->AddTextureMapping(48, 0, 96, 48, 0, 0);
-	m_LandscapeText->AddTextureMapping(48, 97, 0, 48, 0, 0);
-	m_LandscapeText->AddTextureMapping(48, 0, 97, 48, 0, 0);
-	m_LandscapeText->AddTextureMapping(48, 98, 0, 48, 0, 0);
-	m_LandscapeText->AddTextureMapping(48, 0, 98, 48, 0, 0);
-	m_LandscapeText->AddTextureMapping(48, 99, 0, 48, 0, 0);
-	m_LandscapeText->AddTextureMapping(48, 0, 99, 48, 0, 0);
-	*/
-
-
-	//- degugging Colors
+	//----
+	//- degugging Color-patterns
 	float texWidth = 1.0f / m_LandscapeText->getWidth();
 	float texHeight = 1.0f / m_LandscapeText->getHeight();
-	clLandscapeTextures::tyTriangleTexture * pTrea = m_LandscapeText->AddTexturePlainColored32x32(128, 128, 128, 255);
+
+	clLandscapeTextures::tyTriangleTexture * pTrea;
+
+	pTrea = m_LandscapeText->AddTexturePlainColored32x32(128, 128, 128, 255);
 	m_markerType.AraeHeight = 0;
 	m_markerType.textureType = pTrea->texType;
 	m_markerType.textureA_var1_X = texWidth * pTrea->up_var1_x;
@@ -1138,7 +914,7 @@ void loadResource()
 	m_markerType.textureB_var1_Y = texHeight * pTrea->down_var1_y;
 	m_markerType.textureB_var2_X = texWidth * pTrea->down_var2_x;
 	m_markerType.textureB_var2_Y = texHeight * pTrea->down_var2_y;
-	
+
 
 	pTrea = m_LandscapeText->AddTexturePlainColored32x32(0, 0, 0, 254);
 	m_ErrorType.AraeHeight = 0;
@@ -1151,79 +927,27 @@ void loadResource()
 	m_ErrorType.textureB_var1_Y = texHeight * pTrea->down_var1_y;
 	m_ErrorType.textureB_var2_X = texWidth * pTrea->down_var2_x;
 	m_ErrorType.textureB_var2_Y = texHeight * pTrea->down_var2_y;
-
-
-
 	//- END degugging Colors
 
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[7], &gfxLand, 10); //- see [OK]
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[16], &gfxLand, 0); //- grass [OK]
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[32], &gfxLand, 21); //- rock [OK]
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[48], &gfxLand, 31); //- beach [OK]
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[64], &gfxLand, 18); //- desert [OK]
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[80], &gfxLand, 7); //- swamp [OK]
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[128], &gfxLand, 24); //- Polar/ice [OK]
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX(&txLandscape[144], &gfxLand, 4); //- mud [OK]
 
-	//- between the different map-textures a blending is created. 
-	//-  for this blending the outer-part of the feld (e.g. grass=0 -> 128) is changed PLUS two map-rows (20,65) and then the outer-part of the dessert
-	//-  to make the blend more cloudy the are always two images for the same purpose (e.g. {128 | 129})
-	//- for 16-->64: [ {0}, {128 | 129} , {130 | 131}, {132 | 133} , {134 | 135}, {136 | 137} ,  {138 | 139}, {18}   <--- texture-file-index
-	//--             |      16          |           20             |             65           |         64           <--- map-type-index
-	//--                   grass                                                                      desert         <---  "name"
-	//-
-	//-- to improve handling of the blending and the variation of textures, the textures for one map-type-index are copyed side by side in one texture:
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[20], &gfxLand, 130, 131, 132, 133, 16, 65); //- 128 129 130 131
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[65], &gfxLand, 134, 135, 136, 137, 20, 64); 
 
-	//- water
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[0], &gfxLand, 84, 85, 86, 87, 1, 48);
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[1], &gfxLand, 88, 89, 90, 91, 0, 2);
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[2], &gfxLand, 92, 93, 94, 95, 1, 3);
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[3], &gfxLand, 96, 97, 98, 99, 2, 4);
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[4], &gfxLand, 100, 101, 102, 103, 3, 5);
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[5], &gfxLand, 104, 105, 106, 107, 4, 6);
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[6], &gfxLand, 108, 109, 110, 111, 5, 7);
 	
-	//- rock
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[17], &gfxLand, 120, 121, 122, 123, 16, 33);
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[33], &gfxLand, 124, 125, 126, 127, 17, 32);
-
-	//- mud
-	//-  140, 141
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[23], &gfxLand, 142, 143, 144, 145, 16, 145);
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[145], &gfxLand, 146, 147, 148, 149, 23, 144);
-	//-  150, 151
-
-	//- swamp
-	//-  201, 202
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[21], &gfxLand, 203, 204, 205, 206, 16, 81);
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[81], &gfxLand, 207, 208, 209, 210, 21, 80);
-	//-  211, 212
-    
-
-	//- ice
-	//-  156, 157
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[35], &gfxLand, 158, 159, 160, 161, 32, 129);
-	//clOpenGLTexturesHelper::loadLandscapeTextureFromGFX2x2(&txLandscape[129], &gfxLand, 162, 163, 164, 165, 35, 128);
-	//-  166, 167
 
 
-
-	//gfxLand.getTextureLandscape(&txLandscape[20], renderer, 20);
-	//gfxLand.getTextureLandscape(&txLandscape[65], renderer, 19);
-	//gfxLand.getTextureLandscape(&txLandscape[17], renderer, 22); //24,23
-	//gfxLand.getTextureLandscape(&txLandscape[33], renderer, 23);
-
-	//gfxLand.getTextureLandscape(&txLandscape[35], renderer, 165);
-	//gfxLand.getTextureLandscape(&txLandscape[129], renderer, 166);
-
-
-	//- Objects
+	//---------------------
+	//- load map Objects
 	clGFXFile gfxObjects = clGFXFile("Siedler3_01.f8007e01f.dat");
+	
 
-	clOpenGLTexturesHelper::load_game_objects(gfxObjects, txObjects);
+	m_ObjectText = new clObjectTextures(128 * 16, 128 * 12, 400);
 
+	clTexturesLoadHelper::load_game_objects(m_ObjectText, &gfxObjects);
+
+	txObjects = m_ObjectText->getObjectTexturs();
+
+
+	//---------------------
+	//- load buildings
 
 	/*
 	//clGameObjects::load_game_buildings_roman(renderer, gfxObjects, txBuildings);
@@ -1281,7 +1005,7 @@ void loadResource()
 
 
 //=============================================================================
-// CALLBACKS
+// OPEN-GL [glfw] CALLBACKS
 //=============================================================================
 
 //-------------------------------------//
@@ -1397,7 +1121,6 @@ void mouse_move_callback(GLFWwindow *window, double xpos, double ypos)
 static void error_callback(int error, const char* description)
 {
 	m_error.AddError("GLFW: [%i] %s", error, description);
-	fputs(description, stderr);
 }
 
 

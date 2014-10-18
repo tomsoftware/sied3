@@ -93,7 +93,9 @@
     <ClCompile Include="..\..\src\clGFXFile.cpp" />
     <ClCompile Include="..\..\src\clLandscapeTextures.cpp" />
     <ClCompile Include="..\..\src\clMapFileReader.cpp" />
-    <ClCompile Include="..\..\src\clOpenGLTexturesHelper.cpp" />
+    <ClCompile Include="..\..\src\clObjectTextures.cpp" />
+    <ClCompile Include="..\..\src\clShader.cpp" />
+    <ClCompile Include="..\..\src\clTexturesLoadHelper.cpp" />
     <ClCompile Include="..\..\src\clTextureAtlas.cpp" />
     <ClCompile Include="..\..\src\main.cpp" />
   </ItemGroup>
@@ -107,7 +109,9 @@
     <ClInclude Include="..\..\src\clGFXFile.h" />
     <ClInclude Include="..\..\src\clLandscapeTextures.h" />
     <ClInclude Include="..\..\src\clMapFileReader.h" />
-    <ClInclude Include="..\..\src\clOpenGLTexturesHelper.h" />
+    <ClInclude Include="..\..\src\clObjectTextures.h" />
+    <ClInclude Include="..\..\src\clShader.h" />
+    <ClInclude Include="..\..\src\clTexturesLoadHelper.h" />
     <ClInclude Include="..\..\src\clTextureAtlas.h" />
     <ClInclude Include="..\..\src\main.h" />
   </ItemGroup>

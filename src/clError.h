@@ -3,6 +3,10 @@
 
 #include <stdio.h>
 
+#define GLEW_STATIC
+#include <GL/glew.h>
+
+
 class clError
 {
 private:
@@ -14,6 +18,8 @@ public:
 	void AddError(const char * errorString, ...);
 	void AddPlanText(const char * debugText);
 	void AddDebug(const char * debugString, ...);
+	bool checkForGlError(const char * debugString, ...);
+	bool checkForGlShaderError(GLuint shaderProgram, const char * debugString, ...);
 };
 
 #endif

@@ -4,7 +4,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
+#define STRINGIFY(A) #A
+
+
 #define GLEW_STATIC
+
 
 // Include GLEW. Always include it before gl.h and glfw.h, since it's a bit magic.
 #include <GL/glew.h>
@@ -18,16 +23,19 @@
 #include "clError.h"
 #include "clMapFileReader.h"
 #include "clGameObjects.h"
-#include "clOpenGLTexturesHelper.h"
+#include "clTexturesLoadHelper.h"
 #include "clLandscapeTextures.h"
+#include "clObjectTextures.h"
+#include "clShader.h"
 
+/*
 struct ty_Animation
 {
-	clOpenGLTexturesHelper::ty_TextureObject *texture;
-	clOpenGLTexturesHelper::ty_TextureObject *torso;
+	clTexturesLoadHelper::ty_TextureObject *texture;
+	clTexturesLoadHelper::ty_TextureObject *torso;
 	int count;
 };
-
+*/
 
 enum enumGradient
 {
@@ -59,7 +67,7 @@ float mouseY=0;
 float cameraAngleX=0;
 float cameraAngleY=0;
 float cameraDistance = 10.0f;
-int drawMode=0;// 0:fill, 1: wireframe, 2:points
+int drawMode=0;// 0:fill, 1:wireframe, 2:points
 int screenWidth = 1024;
 int screenHeight = 640;
 
@@ -72,6 +80,7 @@ void setUpCam();
 bool initGLContext();
 void unloadWindow();
 
+void loadShader();
 
 void loadResource();
 void loadMap( const char * fileName, clMapFileReader::enum_map_folders mapType);
@@ -84,20 +93,20 @@ clError m_error = clError("main");
 GLFWwindow* m_window;
 
 
-clOpenGLTexturesHelper::ty_TextureObject txBuild;
-//clOpenGLTexturesHelper::ty_TextureObject txLandscape[256];
-clOpenGLTexturesHelper::ty_TextureObject txObjects[256];
-clOpenGLTexturesHelper::ty_TextureObject txBuildings[256];
-clOpenGLTexturesHelper::ty_TextureObject txSied;
-clOpenGLTexturesHelper::ty_TextureObject txTorso;
+clTexturesLoadHelper::ty_TextureObject txBuild;
+clObjectTextures::ty_TextureObject *txObjects;
+clTexturesLoadHelper::ty_TextureObject txBuildings[256];
+clTexturesLoadHelper::ty_TextureObject txSied;
+clTexturesLoadHelper::ty_TextureObject txTorso;
 
 clLandscapeTextures * m_LandscapeText;
+clObjectTextures * m_ObjectText;
 
-//SDL_Texture * mapPreview;
 
-ty_Animation animWizzard;
 
-//SDL_Palette*palTorso;
+//ty_Animation animWizzard;
+
+
 
 int AnimationID = 382; //368;
 int BuildingID = 10;
@@ -154,7 +163,7 @@ unsigned int *m_map_AccessiblePlayerResources = NULL;
 //unsigned int *m_map_AraeNeighbor = NULL;
 int m_mapWidth=0;
 int m_mapHeight=0;
-//void drawObject(clOpenGLTexturesHelper::ty_TextureObject *texture, clOpenGLTexturesHelper::ty_TextureObject *torso, int x, int y, int scale = 1);
+//void drawObject(clTexturesLoadHelper::ty_TextureObject *texture, clTexturesLoadHelper::ty_TextureObject *torso, int x, int y, int scale = 1);
 
 int m_mapPosX = 0;
 int m_mapPosY = 220;
@@ -164,11 +173,11 @@ int m_MouseDownStartY = 0;
 int m_marker = -1;
 bool m_useHeight = true;
 
-clGFXFile gfxSied12;
-clGFXFile gfxSied11;
-clGFXFile gfxSied10;
-clGFXFile gfxAnimation;
-clGFXFile gfxBuilding;
+//clGFXFile gfxSied12;
+//clGFXFile gfxSied11;
+//clGFXFile gfxSied10;
+//clGFXFile gfxAnimation;
+//clGFXFile gfxBuilding;
 
 
 
@@ -180,12 +189,14 @@ static void mouse_move_callback(GLFWwindow *window, double xpos, double ypos);
 enumGradient getGradientA(unsigned char H1, unsigned char H2, unsigned char H3);
 enumGradient getGradientB(unsigned char H1, unsigned char H2, unsigned char H3);
 
-void initShader();
+//void initShader();
 //void rendershadertest();
 
-GLuint m_brightness; //- shader Variable
-GLuint m_pixle_shader;
-GLuint m_shader_Program;
+//GLuint m_brightness; //- shader Variable
+//GLuint m_pixle_shader;
+//GLuint m_shader_Program;
+
+clShader m_map_shader;
 
 //ProgramObject: GLhandle;
 //VertexShaderObject: GLhandle;

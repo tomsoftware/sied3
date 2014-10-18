@@ -1,5 +1,5 @@
-#ifndef CLOPENGLTEXTURESHELPER_H
-#define CLOPENGLTEXTURESHELPER_H
+#ifndef clTexturesLoadHelper_H
+#define clTexturesLoadHelper_H
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -7,8 +7,10 @@
 #include "clGFXFile.h"
 #include "clError.h"
 #include "clGameObjects.h"
+#include "clObjectTextures.h"
+#include "clLandscapeTextures.h"
 
-class clOpenGLTexturesHelper
+class clTexturesLoadHelper
 {
 	public:
 
@@ -33,22 +35,18 @@ class clOpenGLTexturesHelper
 
 		//static void loadLandscapeTextureFromGFX(ty_TextureObject * dest, clGFXFile * gfxFileObj, int gfxTextureId);
 		//static void loadLandscapeTextureFromGFX2x2(ty_TextureObject * dest, clGFXFile * gfxFileObj, int gfxTextureId00, int gfxTextureId01, int gfxTextureId10, int gfxTextureId11, int forGfxTextureId0, int forGfxTextureId1);
-		static void loadObjectTextureFromGFX(ty_TextureObject * dest, clGFXFile * gfxFileObj, int gfxTextureId, int gfxSharowId, int gfxFram);
+		static void loadObjectTextureFromGFX( ty_TextureObject * dest, clGFXFile * gfxFileObj, int gfxTextureId, int gfxSharowId, int gfxFram);
 
 		//static void copyGFXimage(unsigned int *dest, unsigned int * src, int posX, int posY, int  width, int  height, int  destWidth);
 
-		static void load_game_objects(clGFXFile &gfxObjects, clOpenGLTexturesHelper::ty_TextureObject txObjects[255]);
+		static void load_game_objects(clObjectTextures *objectTextures, clGFXFile *gfxObjects);
 		//void static load_game_buildings_roman(SDL_Renderer *renderer, clGFXFile &gfxObjects, clGFXFile::GFX_ObjectTexture txObjects[255]);
+		static void clTexturesLoadHelper::load_map_patterns(clLandscapeTextures *objectTextures, clGFXFile *gfxLand);
 
-		static bool checkForGlError(const char * errorText);
-		static bool checkForGlShaderError(GLuint shaderProgram, const char * errorText);
 
 	private:
-		clOpenGLTexturesHelper();
-		~clOpenGLTexturesHelper();
-		//GLuint getFreeTexture();
-		static clOpenGLTexturesHelper &getInstance();
-		clError m_error = clError("clOpenGLTexturesHelper");
+		static clTexturesLoadHelper &getInstance();
+		clError m_error = clError("clTexturesLoadHelper");
 		
 };
 

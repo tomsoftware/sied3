@@ -88,7 +88,7 @@ public:
 	int findTriangle(unsigned int TriangleMapId, bool returnNegativeIfNotFound = false);
 private:
 	tyTriangleTexture * createNewTriangle(unsigned int TriangleMapId);
-	clError m_error = clError("clLandTexte");
+	clError m_error = clError("clLandTex");
 	void copyTriangleInformation(tyTriangleTexture * dest, tyTriangleTexture * src);
 
 };

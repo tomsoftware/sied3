@@ -7,7 +7,7 @@ clTextureAtlas::clTextureAtlas(int width, int height)
 	m_height = height;
 	
 	//- create buffer for texture-iamge
-	m_buffer = new unsigned int[m_width*m_height];
+	m_img_buffer = new unsigned int[m_width*m_height];
 
 	//- reset all slots
 	for (int i = 0; i < _TEXTURE_HEIGHT_COUNT; i++)
@@ -25,20 +25,22 @@ clTextureAtlas::clTextureAtlas(int width, int height)
 //-------------------------------------//
 clTextureAtlas::~clTextureAtlas()
 {
-	delete [] m_buffer;
+	if (m_img_buffer != NULL) delete[] m_img_buffer;
+	m_img_buffer = 0;
 	m_width = 0;
 	m_height = 0;
 }
 
+
+
 //-------------------------------------//
 clTextureAtlas::enumTexturSizeSlot clTextureAtlas::getSlotByHeight(int height)
 {
-	if (height <= 8) return clTextureAtlas::enumTexturSizeSlot::TEXTURE_HEIGHT_8;
-	if (height <= 16) return clTextureAtlas::enumTexturSizeSlot::TEXTURE_HEIGHT_16;
-	if (height <= 32) return clTextureAtlas::enumTexturSizeSlot::TEXTURE_HEIGHT_32;
-	if (height <= 64) return clTextureAtlas::enumTexturSizeSlot::TEXTURE_HEIGHT_64;
-	if (height <= 128) return clTextureAtlas::enumTexturSizeSlot::TEXTURE_HEIGHT_128;
-	if (height <= 256) return clTextureAtlas::enumTexturSizeSlot::TEXTURE_HEIGHT_256;
+	for (int i = 0; i < _TEXTURE_HEIGHT_COUNT; i++)
+	{
+		if (height <= SLOT_HEIGHT[i]) return (clTextureAtlas::enumTexturSizeSlot) i;
+	}
+
 	return clTextureAtlas::enumTexturSizeSlot::_TEXTURE_HEIGHT_COUNT;
 }
 
@@ -90,12 +92,12 @@ void clTextureAtlas::AddTexture(tyTextureAtlasPos *outTexturePos, unsigned int *
 	int outX = m_slot_pos_x[slot];
 	int outY = m_slot_pos_y[slot];
 
-	copyimage(m_buffer, data, outX, outY, width, height, m_width);
+	copyimage(m_img_buffer, data, outX, outY, width, height, m_width);
 
 	//- repeat a part of the image at the end of the original image
 	if (repeatWidth > 0)
 	{
-		copyimage(m_buffer, data, outX + width, outY, repeatWidth, height, m_width, width);
+		copyimage(m_img_buffer, data, outX + width, outY, repeatWidth, height, m_width, width);
 	}
 
 	//- move slot position
@@ -139,6 +141,8 @@ GLuint clTextureAtlas::createGLTextureAtlas()
 {
 	GLuint texID = NULL;
 
+	if (m_img_buffer == NULL) return 0;
+
 	//- Create one OpenGL texture
 	glGenTextures(1, &texID);
 
@@ -146,13 +150,18 @@ GLuint clTextureAtlas::createGLTextureAtlas()
 	glBindTexture(GL_TEXTURE_2D, texID);
 
 	//-	Give the image to OpenGL
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, m_buffer);
-	checkForGlError("createGLTextureAtlas()");
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, m_img_buffer);
+	m_error.checkForGlError("createGLTextureAtlas()");
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
 	m_error.AddDebug("Position: %i px out of: %i px", m_filled_y_pos, m_height);
+
+	//- delete image buffer
+	delete[] m_img_buffer;
+	m_img_buffer = 0;
+
 
 	return texID;
 }
@@ -170,26 +179,3 @@ int clTextureAtlas::getWidth()
 	return m_width;
 }
 
-//-------------------------------------//
-bool clTextureAtlas::checkForGlError(const char * errorText)
-{
-	int err = glGetError();
-
-	if (err == GL_NO_ERROR) return false;
-
-	const char * GL_Error_text = "";
-	switch (err)
-	{
-	case GL_INVALID_ENUM: GL_Error_text = "GL_INVALID_ENUM"; break;
-	case GL_INVALID_VALUE: GL_Error_text = "GL_INVALID_VALUE"; break;
-	case GL_INVALID_OPERATION: GL_Error_text = "GL_INVALID_OPERATION"; break;
-	case GL_INVALID_FRAMEBUFFER_OPERATION: GL_Error_text = "GL_INVALID_VALUE"; break;
-	case GL_OUT_OF_MEMORY: GL_Error_text = "GL_OUT_OF_MEMORY"; break;
-	case GL_STACK_UNDERFLOW: GL_Error_text = "GL_STACK_UNDERFLOW"; break;
-	case GL_STACK_OVERFLOW: GL_Error_text = "GL_STACK_OVERFLOW"; break;
-	}
-
-	m_error.AddError("%s Err: %i [%s]", errorText, err, GL_Error_text);
-
-	return true;
-}

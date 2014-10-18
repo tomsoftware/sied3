@@ -27,6 +27,8 @@ class clTextureAtlas
 			TEXTURE_HEIGHT_16,
 			TEXTURE_HEIGHT_32,
 			TEXTURE_HEIGHT_64,
+			TEXTURE_HEIGHT_85,
+			TEXTURE_HEIGHT_105,
 			TEXTURE_HEIGHT_128,
 			TEXTURE_HEIGHT_256,
 			_TEXTURE_HEIGHT_COUNT
@@ -52,7 +54,7 @@ class clTextureAtlas
 
 		int m_slot_pos_x[_TEXTURE_HEIGHT_COUNT];
 		int m_slot_pos_y[_TEXTURE_HEIGHT_COUNT];
-		unsigned int * m_buffer;
+		unsigned int * m_img_buffer;
 		int m_width;
 		int m_height;
 		int m_filled_y_pos;
@@ -63,10 +65,9 @@ class clTextureAtlas
 	private:
 		enumTexturSizeSlot getSlotByHeight(int height);
 		void copyimage(unsigned int *dest, unsigned int * src, int posX, int posY, int width, int height, int destWidth, int srcWidth=-1);
-		bool checkForGlError(const char * errorText);
 };
 
 __declspec(selectany)
-const int clTextureAtlas::SLOT_HEIGHT [] = { 8, 16, 32, 64, 128, 256 };
+const int clTextureAtlas::SLOT_HEIGHT [] = { 8, 16, 32, 64, 85, 105, 128, 256 };
 
 #endif

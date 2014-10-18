@@ -120,10 +120,13 @@ public:
 	bool openGFXFile(const char * fileName);
 
 	bool getTextureLandscape(GFXFILE_TextureObject *outGFXObject, int id);
+	
 	bool getTextureObject(GFXFILE_TextureObject *outGFXObject, int sequenzeId, int shadowId, int frame = 0);
 	bool getTextureTorso(GFXFILE_TextureObject * outGFXObject, int id, int frame);
 
 	int getTextureLandscapeCount();
+	int getTextureObjectCount();
+	int getTextureObjectSequenzCount(int sequenzeId);
 
 	bool getAnimationInfo(GFX_ObjectAnimationFrame * outGFXObject, int id, int frame);
 	int getAnimationInfoFrameCount(int id);

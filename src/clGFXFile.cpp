@@ -453,7 +453,23 @@ void clGFXFile::unload_GFX_Object(GFXFILE_TextureObject *outGFXObject)
 	}
 }
 
+//-------------------------------------//
+int clGFXFile::getTextureObjectCount()
+{
+	return m_gfxObjects[enum_GFX_Type::GFX_Type_Object].count;
+}
 
+//-------------------------------------//
+int clGFXFile::getTextureObjectSequenzCount(int sequenzeId)
+{
+	ty_gfxObjects * gfxOb = &m_gfxObjects[enum_GFX_Type::GFX_Type_Object];
+
+	if ((sequenzeId >= 0) && (sequenzeId < gfxOb->count))
+	{
+		return gfxOb->objects[sequenzeId].imgCount;
+	}
+	return 0;
+}
 
 //-------------------------------------//
 bool clGFXFile::getTextureObject(GFXFILE_TextureObject *outGFXObject, int sequenzeId, int shadowId, int frame)
