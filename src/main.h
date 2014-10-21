@@ -137,21 +137,19 @@ struct ty_mapLandscape
 
 	//- point (2) is the main point of this feld
 	unsigned char AraeType; //- type of point
-	unsigned char AraeHeight;  //- height of point
 
-	unsigned char AraeHeight1;  //- height of point
-	unsigned char AraeHeight3;  //- height of point
-	unsigned char AraeHeight4;  //- height of point
+	unsigned char AraeHeight1;  //- height of point 1
+	unsigned char AraeHeight2;  //- height of point 2 (Main)
+	unsigned char AraeHeight3;  //- height of point 3
+	unsigned char AraeHeight4;  //- height of point 4
 
-	//unsigned char gradientA;
-	//unsigned char gradientB;
+	//- gradient for shadow
+	unsigned char gradientA1; // Of point 1
+	unsigned char gradientA2; // Of point 2 (Main)
+	unsigned char gradientA3; // Of point 3
+	unsigned char gradientA4; // Of point 4
 
-	unsigned char gradientA1;
-	unsigned char gradientA2;
-	unsigned char gradientA3;
-	unsigned char gradientA4;
-
-	clLandscapeTextures::enumTextureType textureType;
+	unsigned char /* clLandscapeTextures::enumTextureType */ textureType;
 };
 
 ty_mapLandscape *m_map_landscape;

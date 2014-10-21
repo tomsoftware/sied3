@@ -13,9 +13,8 @@ class clShader
 
 private:
 
-
-	GLuint m_program=0;
-	GLuint m_shader=0;
+	GLuint m_program;
+	GLuint m_shader;
 	clError m_error = clError("clShader");
 
 public:

@@ -26,9 +26,12 @@ clTextureAtlas::clTextureAtlas(int width, int height)
 clTextureAtlas::~clTextureAtlas()
 {
 	if (m_img_buffer != NULL) delete[] m_img_buffer;
-	m_img_buffer = 0;
+	m_img_buffer = NULL;
 	m_width = 0;
 	m_height = 0;
+
+	if (m_GL_textureID != NULL) glDeleteTextures(1, &m_GL_textureID);
+	m_GL_textureID = NULL;
 }
 
 
@@ -48,6 +51,8 @@ clTextureAtlas::enumTexturSizeSlot clTextureAtlas::getSlotByHeight(int height)
 //-------------------------------------//
 void clTextureAtlas::AddTexture(tyTextureAtlasPos *outTexturePos, unsigned int * data, int width, int height, int repeatWidth)
 {
+	if (m_img_buffer == NULL) return;
+
 	int widthSum = width + repeatWidth;
 
 	if (outTexturePos != NULL)
@@ -112,6 +117,9 @@ void clTextureAtlas::AddTexture(tyTextureAtlasPos *outTexturePos, unsigned int *
 		outTexturePos->height = height;
 	}
 
+	//- update fill state
+	m_fillState += widthSum * height;
+
 }
 
 
@@ -139,15 +147,13 @@ void clTextureAtlas::copyimage(unsigned int *dest, unsigned int * src, int posX,
 //-------------------------------------//
 GLuint clTextureAtlas::createGLTextureAtlas()
 {
-	GLuint texID = NULL;
-
-	if (m_img_buffer == NULL) return 0;
+	if (m_img_buffer == NULL) return m_GL_textureID;
 
 	//- Create one OpenGL texture
-	glGenTextures(1, &texID);
+	glGenTextures(1, &m_GL_textureID);
 
 	//- "Bind" the newly created texture
-	glBindTexture(GL_TEXTURE_2D, texID);
+	glBindTexture(GL_TEXTURE_2D, m_GL_textureID);
 
 	//-	Give the image to OpenGL
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, m_img_buffer);
@@ -156,15 +162,16 @@ GLuint clTextureAtlas::createGLTextureAtlas()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-	m_error.AddDebug("Position: %i px out of: %i px", m_filled_y_pos, m_height);
+	m_error.AddDebug("Position: %ipx out of %ipx - pixle fillstate: %3.1f%%", m_filled_y_pos, m_height, ((m_fillState * 100.0) / (m_height*m_width)));
 
 	//- delete image buffer
 	delete[] m_img_buffer;
-	m_img_buffer = 0;
+	m_img_buffer = NULL;
 
 
-	return texID;
+	return m_GL_textureID;
 }
+
 
 
 //-------------------------------------//

@@ -9,13 +9,13 @@ int main(int argc, char* argv[])
 	loadResource();
 
 	//loadMap("texture.map", clMapFileReader::enum_map_folders::FOLDER_USER);
-	loadMap("448_DEMO.map", clMapFileReader::enum_map_folders::FOLDER_USER);
+	//loadMap("448_DEMO.map", clMapFileReader::enum_map_folders::FOLDER_USER);
 	//loadMap("hoch.map", clMapFileReader::enum_map_folders::FOLDER_USER);
 	//loadMap( "flach.map", clMapFileReader::enum_map_folders::FOLDER_USER);
 	//loadMap("wueste_gras_wueste.map", clMapFileReader::enum_map_folders::FOLDER_USER);
-
+	
+	loadMap("M704-2-Longrun.map", clMapFileReader::enum_map_folders::FOLDER_MULTI);
 	//loadMap("leer1.map", clMapFileReader::enum_map_folders::FOLDER_USER);
-
 
 	loadShader();
 
@@ -367,7 +367,7 @@ void drawMap(int posX, int posY)
 					}
 
 					unsigned char H1 = l->AraeHeight1;
-					unsigned char H2 = l->AraeHeight;
+					unsigned char H2 = l->AraeHeight2;
 					unsigned char H3 = l->AraeHeight3;
 					unsigned char H4 = l->AraeHeight4;
 					
@@ -521,7 +521,7 @@ void drawMapObjects(int posX, int posY)
 							//--   2 --- 3
 
 							int curX = outX + textOb->xRel;
-							int curY = outY - textOb->yRel - textOb->height - teraH;
+							int curY = outY - textOb->yRel - textOb->height + teraH;
 							int curW = textOb->width;
 							int curH = textOb->height;
 
@@ -724,7 +724,7 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 		//--    / A  \  /    
 		//--   N2 --- N3    
 
-		pMapPos->AraeHeight = H2;
+		pMapPos->AraeHeight2 = H2;
 		pMapPos->AraeHeight1 = H1;
 		pMapPos->AraeHeight3 = H3;
 		pMapPos->AraeHeight4 = H4;
@@ -890,7 +890,7 @@ void loadResource()
 	clGFXFile gfxLand = clGFXFile("Siedler3_00.f8007e01f.dat");
 
 	//- create textur-Atlas and triangle-information-buffer
-	m_LandscapeText = new clLandscapeTextures(128 * 8, 128 * 4, 300);
+	m_LandscapeText = new clLandscapeTextures(128 * 4, 128 * 6, 300);
 
 	//- load map patterns and define triangles
 	clTexturesLoadHelper::load_map_patterns(m_LandscapeText, &gfxLand);
@@ -904,7 +904,7 @@ void loadResource()
 	clLandscapeTextures::tyTriangleTexture * pTrea;
 
 	pTrea = m_LandscapeText->AddTexturePlainColored32x32(128, 128, 128, 255);
-	m_markerType.AraeHeight = 0;
+	m_markerType.AraeHeight2 = 0;
 	m_markerType.textureType = pTrea->texType;
 	m_markerType.textureA_var1_X = texWidth * pTrea->up_var1_x;
 	m_markerType.textureA_var1_Y = texHeight * pTrea->up_var1_y;
@@ -917,7 +917,7 @@ void loadResource()
 
 
 	pTrea = m_LandscapeText->AddTexturePlainColored32x32(0, 0, 0, 254);
-	m_ErrorType.AraeHeight = 0;
+	m_ErrorType.AraeHeight2 = 0;
 	m_ErrorType.textureType = pTrea->texType;
 	m_ErrorType.textureA_var1_X = texWidth * pTrea->up_var1_x;
 	m_ErrorType.textureA_var1_Y = texHeight * pTrea->up_var1_y;

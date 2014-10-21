@@ -109,7 +109,7 @@ public:
 		GAME_OBJECT_TREE_ARECACEAE_1 = 78,
 		GAME_OBJECT_TREE_ARECACEAE_2 = 79,
 
-		//-- unknown: 80
+		GAME_OBJECT_TREE_UNKNOWN_5 = 80,
 		//-- unknown: 81
 		//-- unknown: 82
 		//-- unknown: 83

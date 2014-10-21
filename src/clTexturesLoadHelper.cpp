@@ -179,11 +179,12 @@ void clTexturesLoadHelper::load_game_objects(clObjectTextures *objectTextures, c
 	objectTextures->AddTexturePlaneSequenz(clGameObjects::enum_GAME_OBJECTS::GAME_OBJECT_TREE_UNKNOWN_3, gfxObjects, 13, 13);
 	objectTextures->AddTexturePlaneSequenz(clGameObjects::enum_GAME_OBJECTS::GAME_OBJECT_TREE_UNKNOWN_4, gfxObjects, 14, 14);
 
-
+	
 
 	objectTextures->AddTexturePlaneSequenz(clGameObjects::enum_GAME_OBJECTS::GAME_OBJECT_TREE_ARECACEAE_1, gfxObjects, 16, 16);
 	objectTextures->AddTexturePlaneSequenz(clGameObjects::enum_GAME_OBJECTS::GAME_OBJECT_TREE_ARECACEAE_2, gfxObjects, 17, 17);
 
+	objectTextures->AddTexturePlaneSequenz(clGameObjects::enum_GAME_OBJECTS::GAME_OBJECT_TREE_UNKNOWN_5, gfxObjects, 19, 19); //-- or maybe a baby tree??!!
 
 
 	objectTextures->AddTexturePlaneSequenz(clGameObjects::enum_GAME_OBJECTS::GAME_OBJECT_TREE_SMALL, gfxObjects, 22, 22);

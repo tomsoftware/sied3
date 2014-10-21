@@ -45,6 +45,7 @@ class clTextureAtlas
 
 		void loadLandscapeTextureFromGFX(tyTextureAtlasPos * destPos, clGFXFile * gfxFileObj, int gfxTextureId);
 
+		int m_fillState = 0; //- count of used pixels
 
 		int getHeight();
 		int getWidth();
@@ -59,6 +60,7 @@ class clTextureAtlas
 		int m_height;
 		int m_filled_y_pos;
 		clError m_error = clError("clTextureAtlas");
+		GLuint m_GL_textureID = NULL;
 
 		static const int SLOT_HEIGHT[];
 

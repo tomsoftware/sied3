@@ -18,6 +18,7 @@ clObjectTextures::~clObjectTextures()
 {
 	delete []m_Textures;
 	for (int i = 0; i < 256; i++) m_TextureObject[i].frameCount = 0;
+
 }
 
 
@@ -45,7 +46,7 @@ GLuint clObjectTextures::getGLTextureId()
 //-------------------------------------//
 bool clObjectTextures::AddTexturePlane(int gameObjectID, clGFXFile * gfxFileObj, int gfxTextureId, int gfxShadowId, int FrameIndex)
 {
-	if ((gameObjectID < 0) && (gameObjectID > 255))
+	if ((gameObjectID < 0) || (gameObjectID > 255))
 	{
 		m_error.AddError("AddTexturePlane() gameObjectID is out of range: %i", gameObjectID);
 		return false;
@@ -56,8 +57,8 @@ bool clObjectTextures::AddTexturePlane(int gameObjectID, clGFXFile * gfxFileObj,
 	tyTextureAtlasPos texDestPos;
 
 	//- size of Texture Atlas to calc GL texture position [0..1]
-	float textureAtlasHeight = getHeight();
-	float textureAtlasWidth = getWidth();
+	float textureAtlasHeight = (float)getHeight();
+	float textureAtlasWidth = (float)getWidth();
 
 
 		if (m_TexturesPos >= m_TexturesCount)
@@ -106,7 +107,7 @@ bool clObjectTextures::AddTexturePlane(int gameObjectID, clGFXFile * gfxFileObj,
 //-------------------------------------//
 bool clObjectTextures::AddTexturePlaneSequenz(int gameObjectID, clGFXFile * gfxFileObj, int gfxTextureId, int gfxShadowId)
 {
-	if ((gameObjectID < 0) && (gameObjectID > 255))
+	if ((gameObjectID < 0) || (gameObjectID > 255))
 	{
 		m_error.AddError("AddTexturePlaneSequenz() gameObjectID is out of range: %i", gameObjectID);
 		return false;
@@ -120,8 +121,8 @@ bool clObjectTextures::AddTexturePlaneSequenz(int gameObjectID, clGFXFile * gfxF
 	tyTextureAtlasPos texDestPos;
 
 	//- size of Texture Atlas to calc GL texture position [0..1]
-	float textureAtlasHeight = getHeight();
-	float textureAtlasWidth = getWidth();
+	float textureAtlasHeight = (float)getHeight();
+	float textureAtlasWidth = (float)getWidth();
 
 	for (int frame = 0; frame < count; frame++)
 	{
