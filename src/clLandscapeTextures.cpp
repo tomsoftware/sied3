@@ -2,18 +2,22 @@
 
 //-------------------------------------//
 clLandscapeTextures::clLandscapeTextures(int TextureAtlasWidth, int TextureAtlasHeight, int TriangleCount)
-	: clTextureAtlas(TextureAtlasWidth, TextureAtlasHeight)
+: clTextureAtlas(TextureAtlasWidth, TextureAtlasHeight)
 {
 	m_TriangleListPos = -1;
+	m_TriangleSortListPos = -1;
+
 	m_TriangleListSize = TriangleCount;
 
 	m_TriangleList = new tyTriangleTexture[m_TriangleListSize];
+	m_TriangleListSortList = new int[m_TriangleListSize];
 }
 
 //-------------------------------------//
 clLandscapeTextures::~clLandscapeTextures()
 {
 	delete [] m_TriangleList;
+	delete [] m_TriangleListSortList;
 }
 
 
@@ -23,16 +27,17 @@ unsigned int clLandscapeTextures::getTriangleMapId(unsigned char p1, unsigned ch
 	return (((p1 << 8) | p2) << 8) | p3;
 }
 
+
 //-------------------------------------//
 int clLandscapeTextures::findTriangle(unsigned int TriangleMapId, bool returnNegativeIfNotFound)
 {
 	int minPos = 0;
-	int maxPos = m_TriangleListPos;
+	int maxPos = m_TriangleSortListPos;
 
-	if (m_TriangleListPos < 0) return 0;
+	if (m_TriangleSortListPos < 0) return 0;
 
-	unsigned int minVal = m_TriangleList[minPos].MapTypeId;
-	unsigned int maxVal = m_TriangleList[maxPos].MapTypeId;
+	unsigned int minVal = m_TriangleList[m_TriangleListSortList[minPos]].MapTypeId;
+	unsigned int maxVal = m_TriangleList[m_TriangleListSortList[maxPos]].MapTypeId;
 
 	if (TriangleMapId == maxVal) return maxPos;
 	if (TriangleMapId == minVal) return minPos;
@@ -54,7 +59,7 @@ int clLandscapeTextures::findTriangle(unsigned int TriangleMapId, bool returnNeg
 	while (minPos <= maxPos)
 	{
 		pos = (maxPos + minPos) / 2;
-		val = m_TriangleList[pos].MapTypeId;
+		val = m_TriangleList[m_TriangleListSortList[pos]].MapTypeId;
 
 		if (TriangleMapId > val)
 		{
@@ -70,10 +75,11 @@ int clLandscapeTextures::findTriangle(unsigned int TriangleMapId, bool returnNeg
 		}
 	}
 
-	if (returnNegativeIfNotFound) if (m_TriangleList[pos].MapTypeId != TriangleMapId) return -minPos;
+	if (returnNegativeIfNotFound) if (m_TriangleList[m_TriangleListSortList[pos]].MapTypeId != TriangleMapId) return -minPos;
 
 	return minPos;
 }
+
 
 //-------------------------------------//
 clLandscapeTextures::tyTriangleTexture * clLandscapeTextures::createNewTriangle(unsigned int TriangleMapId)
@@ -85,24 +91,30 @@ clLandscapeTextures::tyTriangleTexture * clLandscapeTextures::createNewTriangle(
 	}
 
 	//- find the matched or the next item
-	int newID = findTriangle(TriangleMapId);
+	int newSortID = findTriangle(TriangleMapId);
 
 
 	//m_error.AddDebug("newID: %i - val: %i  [-1]%i [0]%i [+1]%i [+2]%i", newID, TriangleMapId, m_TriangleList[newID - 1], m_TriangleList[newID], m_TriangleList[newID + 1], m_TriangleList[newID+2]);
 
-	//- move all Items behind the ID one step to the end to create a free space
-	for (int i = m_TriangleListPos; i >= newID; i--)
+	//- move all index Items behind the ID one step to the end to create a free space
+	for (int i = m_TriangleSortListPos; i >= newSortID; i--)
 	{
-		m_TriangleList[i + 1] = m_TriangleList[i];
+		m_TriangleListSortList[i + 1] = m_TriangleListSortList[i];
 	}
 
-	//- increase List size
+	//- increase List size (starts with -1)
 	m_TriangleListPos++;
+	m_TriangleSortListPos++;
 
+	int newListPos = m_TriangleListPos;
 
-	tyTriangleTexture * pTList = &m_TriangleList[newID];
+	m_TriangleListSortList[newSortID] = newListPos;
+
+	//- fill new Item
+	tyTriangleTexture * pTList = &m_TriangleList[newListPos];
 	pTList->MapTypeId = TriangleMapId;
    
+
 	return pTList;
 
 }
@@ -123,13 +135,22 @@ GLuint clLandscapeTextures::getGLTextureId()
 
 
 //-------------------------------------//
-clLandscapeTextures::tyTriangleTexture * clLandscapeTextures::getTriangleTextureInformation(unsigned char n1, unsigned char n2, unsigned char n3)
+clLandscapeTextures::tyTriangleTexture * clLandscapeTextures::getTriangleTextureInformation(int index)
+{
+	return &m_TriangleList[index];
+}
+
+
+//-------------------------------------//
+clLandscapeTextures::tyTriangleTexture * clLandscapeTextures::findTriangleTextureInformation(unsigned char n1, unsigned char n2, unsigned char n3)
 {
 	int textMapID = getTriangleMapId(n1, n2, n3);
-	int id = findTriangle(textMapID, true);
+	int sortId = findTriangle(textMapID, true);
 
-	if (id >= 0)
+	if (sortId >= 0)
 	{
+		int id = m_TriangleListSortList[sortId];
+
 		if (textMapID != m_TriangleList[id].MapTypeId)
 		{
 			return NULL;
@@ -141,6 +162,26 @@ clLandscapeTextures::tyTriangleTexture * clLandscapeTextures::getTriangleTexture
 		return NULL;
 	}
 }
+
+//-------------------------------------//
+int clLandscapeTextures::getTriangleTextureID(unsigned char n1, unsigned char n2, unsigned char n3)
+{
+	int textMapID = getTriangleMapId(n1, n2, n3);
+	int sortId = findTriangle(textMapID, true);
+
+	if (sortId < 0) return -1;
+
+	return m_TriangleListSortList[sortId];
+
+}
+
+//-------------------------------------//
+int clLandscapeTextures::getTriangleTextureIDCount()
+{
+	return m_TriangleListPos;
+}
+
+
 //-------------------------------------//
 void clLandscapeTextures::copyTriangleInformation(tyTriangleTexture * dest, tyTriangleTexture * src)
 {
@@ -167,7 +208,7 @@ void clLandscapeTextures::AddTextureMapping(int fromMapType1, int  fromMapType2,
 	pTList = createNewTriangle(getTriangleMapId(fromMapType1, fromMapType2, fromMapType3));
 	if (pTList == NULL) return;
 
-	toId = getTriangleTextureInformation(toMapType1, toMapType2, toMapType3);
+	toId = findTriangleTextureInformation(toMapType1, toMapType2, toMapType3);
 	copyTriangleInformation(pTList, toId);
 
 
@@ -175,7 +216,7 @@ void clLandscapeTextures::AddTextureMapping(int fromMapType1, int  fromMapType2,
 	pTList = createNewTriangle(getTriangleMapId(fromMapType2, fromMapType3, fromMapType1));
 	if (pTList == NULL) return;
 
-	toId = getTriangleTextureInformation(toMapType2, toMapType3, toMapType1);
+	toId = findTriangleTextureInformation(toMapType2, toMapType3, toMapType1);
 	copyTriangleInformation(pTList, toId);
 
 
@@ -183,7 +224,7 @@ void clLandscapeTextures::AddTextureMapping(int fromMapType1, int  fromMapType2,
 	pTList = createNewTriangle(getTriangleMapId(fromMapType3, fromMapType1, fromMapType2));
 	if (pTList == NULL) return;
 
-	toId = getTriangleTextureInformation(toMapType3, toMapType1, toMapType2);
+	toId = findTriangleTextureInformation(toMapType3, toMapType1, toMapType2);
 	copyTriangleInformation(pTList, toId);
 
 
@@ -335,12 +376,11 @@ bool clLandscapeTextures::AddTextureHexagon(clGFXFile * gfxFileObj, int gfxTextu
 
 
 //-------------------------------------//
-clLandscapeTextures::tyTriangleTexture * clLandscapeTextures::AddTexturePlainColored32x32(unsigned char r, unsigned char g, unsigned char b, int MapType)
+int clLandscapeTextures::AddTexturePlainColored32x32(unsigned char r, unsigned char g, unsigned char b)
 {
 	clTextureAtlas::tyTextureAtlasPos atlasPos;
-	tyTriangleTexture * pTList;
 	unsigned int imageRGBA[32 * 32];
-	unsigned int color = (255 | r << 8 | g << 16 | b << 24);
+	unsigned int color = (255 | b << 8 | g << 16 | r << 24);
 
 	//- fill buffer
 	for (int i = sizeof(imageRGBA) / sizeof(int) -1; i >= 0; i--) imageRGBA[i] = color;
@@ -351,8 +391,15 @@ clLandscapeTextures::tyTriangleTexture * clLandscapeTextures::AddTexturePlainCol
 
 
 
-	pTList = createNewTriangle(getTriangleMapId(MapType, MapType, MapType));
-	if (pTList == NULL) return NULL;
+	//- increase List size (starts with -1)
+	m_TriangleListPos++;
+
+	int newListPos = m_TriangleListPos;
+
+	//- fill new Item
+	tyTriangleTexture * pTList = &m_TriangleList[newListPos];
+
+
 	pTList->texType = enumTextureType::TEXTURE_TYPE_SINGEL;
 
 	//--  +- . --- . -+ 
@@ -379,7 +426,7 @@ clLandscapeTextures::tyTriangleTexture * clLandscapeTextures::AddTexturePlainCol
 	pTList->down_var2_y = atlasPos.y + 16;
 
 
-	return pTList;
+	return newListPos;
 }
 
 

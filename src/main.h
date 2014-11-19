@@ -28,6 +28,9 @@
 #include "clObjectTextures.h"
 #include "clShader.h"
 
+
+
+
 /*
 struct ty_Animation
 {
@@ -106,11 +109,85 @@ clObjectTextures * m_ObjectText;
 
 //ty_Animation animWizzard;
 
+struct ty_textureMapPos
+{
+	//- A texture in texture atlas
+	float textureA_var1_X;
+	float textureA_var1_Y;
+
+	float textureA_var2_X;
+	float textureA_var2_Y;
+
+	//- B texture in texture atlas
+	float textureB_var1_X;
+	float textureB_var1_Y;
+
+	float textureB_var2_X;
+	float textureB_var2_Y;
+
+	unsigned char /* clLandscapeTextures::enumTextureType */ textureType;
+};
+
+ty_textureMapPos * m_texturePos;
+int m_texturePos_Size;
+
 
 
 int AnimationID = 382; //368;
 int BuildingID = 10;
 int m_GameLoopCounter = 0;
+
+struct tyBuilding //- 41
+{
+	//- size: 5 Byte
+	unsigned char Type;
+	unsigned int state;
+
+	//- size: 9*4 Byte = 36
+	unsigned int stack1;
+	unsigned int stack2;
+	unsigned int stack3;
+	unsigned int stack4;
+	unsigned int stack5;
+	unsigned int stack6;
+	unsigned int stack7;
+	unsigned int stack8;
+	unsigned int stack9;
+};
+
+struct tyMapObject //- Tree, stone, ...
+{
+	//- size: 2 Byte
+	unsigned char Type;
+	unsigned char state;
+
+};
+
+struct tyStack
+{
+	//- size: 4 Byte
+	unsigned char ResourceType;
+	unsigned char currentAmount;
+	unsigned char outAmount; //- how many items are requestet to leave this stack
+	unsigned char inAmount; //- how many items are requestet to add to this stack
+};
+
+struct tySettler
+{
+	unsigned char Type;
+	unsigned int destination1; //- stack from
+	unsigned int destination2; //- stack to
+	unsigned char ResourceType; //- 0=nothing
+
+};
+
+union UNION_map_object {
+	tyBuilding building;
+	tyMapObject object;
+	tyStack stack;
+
+};
+
 
 struct ty_mapLandscape
 {
@@ -121,19 +198,12 @@ struct ty_mapLandscape
 	//--     / A \ /   
 	//--   (2) ---3 
 
-	//- A texture in texture atlas
-	float textureA_var1_X;
-	float textureA_var1_Y;
-	//- B texture in texture atlas
-	float textureB_var1_X;
-	float textureB_var1_Y;
 
 	//- A texture in texture atlas
-	float textureA_var2_X;
-	float textureA_var2_Y;
+	int textureMapPosA;
 	//- B texture in texture atlas
-	float textureB_var2_X;
-	float textureB_var2_Y;
+	int textureMapPosB;
+
 
 	//- point (2) is the main point of this feld
 	unsigned char AraeType; //- type of point
@@ -149,12 +219,11 @@ struct ty_mapLandscape
 	unsigned char gradientA3; // Of point 3
 	unsigned char gradientA4; // Of point 4
 
-	unsigned char /* clLandscapeTextures::enumTextureType */ textureType;
 };
 
 ty_mapLandscape *m_map_landscape;
-ty_mapLandscape m_markerType; 
-ty_mapLandscape m_ErrorType;
+int m_MarkerTextureTypeID;
+int m_ErrorTextureTypeID;
 
 unsigned int *m_map_AraeHeightObject = NULL;
 unsigned int *m_map_AccessiblePlayerResources = NULL;

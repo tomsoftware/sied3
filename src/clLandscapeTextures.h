@@ -61,15 +61,18 @@ public:
 		int MapTypeId=0;
 	};
 
+
 	tyTriangleTexture * m_TriangleList;
 	int m_TriangleListPos;
 	int m_TriangleListSize;
+	int * m_TriangleListSortList;
+	int m_TriangleSortListPos;
 
 	bool AddTextureHexagon(clGFXFile * gfxFileObj, int gfxTextureFromId_var1, int gfxTextureFromId_var2, int gfxTextureToId_var1, int gfxTextureToId_var2, int fromMapType, int toMapType);
 	unsigned int getTriangleMapId(unsigned char p1, unsigned char p2, unsigned char p3);
 	bool AddTexturePlane32x32(clGFXFile * gfxFileObj, int gfxTextureId, int MapType);
 	bool AddTexturePlane128x128(clGFXFile * gfxFileObj, int gfxTextureId, int MapType);
-	clLandscapeTextures::tyTriangleTexture * AddTexturePlainColored32x32(unsigned char r, unsigned char g, unsigned char b, int MapType);
+	int AddTexturePlainColored32x32(unsigned char r, unsigned char g, unsigned char b);
 
 	void AddTextureMapping(int fromMapType1, int  fromMapType2, int  fromMapType3, int  toMapType1, int  toMapType2, int  toMapType3);
 
@@ -82,8 +85,11 @@ public:
 	//- add triangels
 	void AddHexagonToTriangleInfo(clTextureAtlas::tyTextureAtlasPos * atlasPosVariante1, clTextureAtlas::tyTextureAtlasPos * atlasPosVariante2, int fromMapType, int toMapType);
 	
-	tyTriangleTexture * getTriangleTextureInformation(unsigned char n1, unsigned char n2, unsigned char n3);
+	tyTriangleTexture * getTriangleTextureInformation(int index);
+	tyTriangleTexture * findTriangleTextureInformation(unsigned char n1, unsigned char n2, unsigned char n3);
 
+	int getTriangleTextureID(unsigned char n1, unsigned char n2, unsigned char n3);
+	int getTriangleTextureIDCount();
 
 	int findTriangle(unsigned int TriangleMapId, bool returnNegativeIfNotFound = false);
 private:

@@ -321,46 +321,54 @@ void drawMap(int posX, int posY)
 				{
 					ty_mapLandscape * l = (pRowData + sumX);
 
+					int textMapPosA = l->textureMapPosA;
+					int textMapPosB = l->textureMapPosB;
+
 					//- for debugging we can switch one map-types to white 
 					if (l->AraeType == m_marker)
 					{
-						textX1 = m_markerType.textureA_var1_X;
-						textY1 = m_markerType.textureA_var1_Y;
-
-						textX2 = m_markerType.textureB_var1_X;
-						textY2 = m_markerType.textureB_var1_Y;
-
-						textX1 = m_markerType.textureA_var2_X;
-						textY1 = m_markerType.textureA_var2_Y;
-
-						textX2 = m_markerType.textureB_var2_X;
-						textY2 = m_markerType.textureB_var2_Y;
+						textMapPosA = m_MarkerTextureTypeID;
+						textMapPosB = m_MarkerTextureTypeID;
 					}
-					else if ((l->textureType == clLandscapeTextures::enumTextureType::TEXTURE_TYPE_SINGEL))
+
+
+					ty_textureMapPos * textA = &m_texturePos[textMapPosA];
+					ty_textureMapPos * textB = &m_texturePos[textMapPosB];
+
+					int textureType = textA->textureType;
+
+					if ((textureType == clLandscapeTextures::enumTextureType::TEXTURE_TYPE_SINGEL))
 					{
 						if ((sumX + sumY / 2) % 2)
 						{
-							textX1 = l->textureA_var1_X;
-							textY1 = l->textureA_var1_Y;
+							//- use variant 1
+							textX1 = textA->textureA_var1_X;
+							textY1 = textA->textureA_var1_Y;
 
-							textX2 = l->textureB_var1_X;
-							textY2 = l->textureB_var1_Y;
+							textX2 = textB->textureB_var1_X;
+							textY2 = textB->textureB_var1_Y;
 						}
 						else
 						{
-							textX1 = l->textureA_var2_X;
-							textY1 = l->textureA_var2_Y;
+							//- use variant 2
+							textX1 = textA->textureA_var2_X;
+							textY1 = textA->textureA_var2_Y;
 
-							textX2 = l->textureB_var2_X;
-							textY2 = l->textureB_var2_Y;
+							textX2 = textB->textureB_var2_X;
+							textY2 = textB->textureB_var2_Y;
 						}
+
+
 					}
-					else if ((l->textureType == clLandscapeTextures::enumTextureType::TEXTURE_TYPE_REPEAT128x128))
+					else if ((textureType == clLandscapeTextures::enumTextureType::TEXTURE_TYPE_REPEAT128x128))
 					{
 						//textX1 = l.textureA_var1_X + (((sumX + ((sumY / 4) % 2) * 4) % 8) * 16.f + (sumY % 8)* 8.f) / texWidth;
 						//- toDo: switch every 8th row
-						textX1 = l->textureA_var1_X + textSizeWidth * ((sumX + sumY / 2) % 8);
-						textY1 = l->textureA_var1_Y + textSizeHeight * (sumY % 8);
+
+						ty_textureMapPos *tmp = &m_texturePos[l->textureMapPosA];
+
+						textX1 = tmp->textureA_var1_X + textSizeWidth * ((sumX + sumY / 2) % 8);
+						textY1 = tmp->textureA_var1_Y + textSizeHeight * (sumY % 8);
 
 						textX2 = textX1 + textSizeWidthHalf;
 						textY2 = textY1;
@@ -375,7 +383,7 @@ void drawMap(int posX, int posY)
 					if (!m_useHeight) H1 = H2 = H3 = H4 = 0;
 
 
-					if (l->textureType != clLandscapeTextures::enumTextureType::TEXTURE_TYPE_NOT_FOUND)
+					if (textureType != clLandscapeTextures::enumTextureType::TEXTURE_TYPE_NOT_FOUND)
 					{
 
 						//--      1 --- 4  ^
@@ -648,7 +656,7 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 	//- destroy old map buffer
 	if (m_map_AraeHeightObject != NULL)
 	{
-		delete m_map_AraeHeightObject;
+		delete[] m_map_AraeHeightObject;
 		m_map_AraeHeightObject = NULL;
 	}
 	if (m_map_AccessiblePlayerResources != NULL)
@@ -686,6 +694,37 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 	float texWidth = 1.0f / m_LandscapeText->getWidth();
 	float texHeight = 1.0f / m_LandscapeText->getHeight();
 
+	
+
+	//- Load the coordinates of all landscape triangles
+	int count = m_LandscapeText->getTriangleTextureIDCount();
+	m_texturePos_Size = count;
+	m_texturePos = new ty_textureMapPos[count];
+
+	for (int i = 0; i < count; i++)
+	{
+		clLandscapeTextures::tyTriangleTexture * triInfo = m_LandscapeText->getTriangleTextureInformation(i);
+
+		m_texturePos[i].textureA_var1_X = texWidth * triInfo->up_var1_x;
+		m_texturePos[i].textureA_var1_Y = texHeight * triInfo->up_var1_y;
+
+		m_texturePos[i].textureA_var2_X = texWidth * triInfo->up_var2_x;
+		m_texturePos[i].textureA_var2_Y = texHeight * triInfo->up_var2_y;
+
+
+		m_texturePos[i].textureB_var1_X = texWidth * triInfo->down_var1_x;
+		m_texturePos[i].textureB_var1_Y = texHeight * triInfo->down_var1_y;
+
+		m_texturePos[i].textureB_var2_X = texWidth * triInfo->down_var2_x;
+		m_texturePos[i].textureB_var2_Y = texHeight * triInfo->down_var2_y;
+
+
+		m_texturePos[i].textureType = triInfo->texType;
+	}
+
+
+
+
 	//- Area Type
 	unsigned char N1 = 7;
 	unsigned char N2 = 7;
@@ -693,11 +732,10 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 	unsigned char N4 = 7;
 
 	//- Area Height
-	unsigned char H1 = 7;
-	unsigned char H2 = 7;
-	unsigned char H3 = 7;
-	unsigned char H4 = 7;
-
+	unsigned char H1 = 0;
+	unsigned char H2 = 0;
+	unsigned char H3 = 0;
+	unsigned char H4 = 0;
 
 	for (int i = 0; i < bufferSize; i++)
 	{
@@ -717,8 +755,6 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 			H3 = v3 & 0xFF;
 		}
 
-		clLandscapeTextures::tyTriangleTexture * pTrea;
-
 		//--      N1 --- N4 
 		//--     /  \ B  /    
 		//--    / A  \  /    
@@ -735,51 +771,32 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 		//pMapPos->gradientB = getGradientB(H1, H3, H4);
 
 
-		pTrea = m_LandscapeText->getTriangleTextureInformation(N1, N2, N3);
+		int textureId = m_LandscapeText->getTriangleTextureID(N1, N2, N3);
 
 		pMapPos->AraeType = N1;
-
-		if (pTrea != NULL)
+		
+		if (textureId >= 0)
 		{
-			pMapPos->textureType = pTrea->texType;
-
-			pMapPos->textureA_var1_X = texWidth * pTrea->up_var1_x;
-			pMapPos->textureA_var1_Y = texHeight * pTrea->up_var1_y;
-			pMapPos->textureA_var2_X = texWidth * pTrea->up_var2_x;
-			pMapPos->textureA_var2_Y = texHeight * pTrea->up_var2_y;
+			pMapPos->textureMapPosA = textureId;
 		}
 		else
 		{
 			//- this combination is not defined
-			pMapPos->textureType = clLandscapeTextures::enumTextureType::TEXTURE_TYPE_SINGEL;
-
-			//- use error texture
-			pMapPos->textureA_var1_X = m_ErrorType.textureA_var1_X;
-			pMapPos->textureA_var1_Y = m_ErrorType.textureA_var1_Y;
-			pMapPos->textureA_var2_X = m_ErrorType.textureA_var2_X;
-			pMapPos->textureA_var2_Y = m_ErrorType.textureA_var2_Y;
+			pMapPos->textureMapPosA = m_ErrorTextureTypeID;
 			
 			m_error.AddError("map texture not found: %i %i %i", (int) N1, (int) N2, (int) N3);
 		}
 
-		pTrea = m_LandscapeText->getTriangleTextureInformation(N1, N3, N4);
-		if (pTrea != NULL)
+		textureId = m_LandscapeText->getTriangleTextureID(N1, N3, N4);
+
+		if (textureId >= 0)
 		{
-			pMapPos->textureB_var1_X = texWidth * pTrea->down_var1_x;
-			pMapPos->textureB_var1_Y = texHeight *  pTrea->down_var1_y;
-			pMapPos->textureB_var2_X = texWidth * pTrea->down_var2_x;
-			pMapPos->textureB_var2_Y = texHeight * pTrea->down_var2_y;
+			pMapPos->textureMapPosB = textureId;
 		}
 		else
 		{
 			//- this combination is not defined
-			pMapPos->textureType = clLandscapeTextures::enumTextureType::TEXTURE_TYPE_SINGEL;
-
-			//- use error texture
-			pMapPos->textureB_var1_X = m_ErrorType.textureB_var1_X;
-			pMapPos->textureB_var1_Y = m_ErrorType.textureB_var1_Y;
-			pMapPos->textureB_var2_X = m_ErrorType.textureB_var2_X;
-			pMapPos->textureB_var2_Y = m_ErrorType.textureB_var2_Y;
+			pMapPos->textureMapPosB = m_ErrorTextureTypeID;
 
 			m_error.AddError("map texture not found: %i %i %i", (int) N1, (int) N3, (int) N4);
 		}
@@ -890,7 +907,7 @@ void loadResource()
 	clGFXFile gfxLand = clGFXFile("Siedler3_00.f8007e01f.dat");
 
 	//- create textur-Atlas and triangle-information-buffer
-	m_LandscapeText = new clLandscapeTextures(128 * 4, 128 * 6, 300);
+	m_LandscapeText = new clLandscapeTextures(544, 576, 300);
 
 	//- load map patterns and define triangles
 	clTexturesLoadHelper::load_map_patterns(m_LandscapeText, &gfxLand);
@@ -898,35 +915,10 @@ void loadResource()
 
 	//----
 	//- degugging Color-patterns
-	float texWidth = 1.0f / m_LandscapeText->getWidth();
-	float texHeight = 1.0f / m_LandscapeText->getHeight();
 
-	clLandscapeTextures::tyTriangleTexture * pTrea;
+	m_ErrorTextureTypeID = m_LandscapeText->AddTexturePlainColored32x32(255, 0, 0);
+	m_MarkerTextureTypeID = m_LandscapeText->AddTexturePlainColored32x32(0, 0, 0);
 
-	pTrea = m_LandscapeText->AddTexturePlainColored32x32(128, 128, 128, 255);
-	m_markerType.AraeHeight2 = 0;
-	m_markerType.textureType = pTrea->texType;
-	m_markerType.textureA_var1_X = texWidth * pTrea->up_var1_x;
-	m_markerType.textureA_var1_Y = texHeight * pTrea->up_var1_y;
-	m_markerType.textureA_var2_X = texWidth * pTrea->up_var2_x;
-	m_markerType.textureA_var2_Y = texHeight * pTrea->up_var2_y;
-	m_markerType.textureB_var1_X = texWidth * pTrea->down_var1_x;
-	m_markerType.textureB_var1_Y = texHeight * pTrea->down_var1_y;
-	m_markerType.textureB_var2_X = texWidth * pTrea->down_var2_x;
-	m_markerType.textureB_var2_Y = texHeight * pTrea->down_var2_y;
-
-
-	pTrea = m_LandscapeText->AddTexturePlainColored32x32(0, 0, 0, 254);
-	m_ErrorType.AraeHeight2 = 0;
-	m_ErrorType.textureType = pTrea->texType;
-	m_ErrorType.textureA_var1_X = texWidth * pTrea->up_var1_x;
-	m_ErrorType.textureA_var1_Y = texHeight * pTrea->up_var1_y;
-	m_ErrorType.textureA_var2_X = texWidth * pTrea->up_var2_x;
-	m_ErrorType.textureA_var2_Y = texHeight * pTrea->up_var2_y;
-	m_ErrorType.textureB_var1_X = texWidth * pTrea->down_var1_x;
-	m_ErrorType.textureB_var1_Y = texHeight * pTrea->down_var1_y;
-	m_ErrorType.textureB_var2_X = texWidth * pTrea->down_var2_x;
-	m_ErrorType.textureB_var2_Y = texHeight * pTrea->down_var2_y;
 	//- END degugging Colors
 
 
