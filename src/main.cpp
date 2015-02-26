@@ -57,7 +57,7 @@ bool initGLContext()
 
 
 
-	m_window = glfwCreateWindow(1024, 640, "Sied3", NULL, NULL);
+	m_window = glfwCreateWindow(1500, 800, "Sied3", NULL, NULL);
 	if (!m_window)
 	{
 		m_error.AddError("glfwCreateWindow() Failed.");
@@ -283,6 +283,15 @@ void drawMap(int posX, int posY)
 	//- the heigh of one line
 	static const int YSTEP = (16 * 9 / 8) / 2;
 
+	//- range to display
+	int view_width = 0;
+	int view_height = 0;
+
+	glfwGetFramebufferSize(m_window, &view_width, &view_height);
+	view_width = view_width / 16;
+	view_height = view_height / YSTEP;
+
+
 
 	//- setup OpenGL
 	glMatrixMode(GL_MODELVIEW);
@@ -290,6 +299,7 @@ void drawMap(int posX, int posY)
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	
 	glLoadIdentity();
 
 	//- use the texture atlas Texture
@@ -304,7 +314,7 @@ void drawMap(int posX, int posY)
 
 
 
-	for (int y = 0; y < 68; y++)
+	for (int y = 0; y < view_height; y++)
 	{
 		outX = (y % 2) * 8;
 		int sumY = posY + y;
@@ -313,25 +323,31 @@ void drawMap(int posX, int posY)
 		{
 			ty_mapLandscape * pRowData = m_map_landscape + (m_mapHeight - sumY - 1)*m_mapWidth;
 
-			for (int x = 0; x < 60; x++)
+			for (int x = 0; x < view_width; x++)
 			{
 				int sumX = posX + x - y/2;
 
 				if ((sumX < m_mapWidth) && (sumX >= 0))
 				{
+					//--      + --- +  
+					//--     / \ B /   
+					//--    / A \ /    
+					//--   2 --- +     
+
+
 					ty_mapLandscape * l = (pRowData + sumX);
 
 					int textMapPosA = l->textureMapPosA;
 					int textMapPosB = l->textureMapPosB;
 
-					//- for debugging we can switch one map-types to white 
+					//- for debugging we can switch one map-types (=m_marker) to white 
 					if (l->AraeType == m_marker)
 					{
 						textMapPosA = m_MarkerTextureTypeID;
 						textMapPosB = m_MarkerTextureTypeID;
 					}
 
-
+					//- get Texture information
 					ty_textureMapPos * textA = &m_texturePos[textMapPosA];
 					ty_textureMapPos * textB = &m_texturePos[textMapPosB];
 
@@ -374,10 +390,10 @@ void drawMap(int posX, int posY)
 						textY2 = textY1;
 					}
 
-					unsigned char H1 = l->AraeHeight1;
-					unsigned char H2 = l->AraeHeight2;
-					unsigned char H3 = l->AraeHeight3;
-					unsigned char H4 = l->AraeHeight4;
+					unsigned int H1 = l->AraeHeight1;
+					unsigned int H2 = l->AraeHeight2;
+					unsigned int H3 = l->AraeHeight3;
+					unsigned int H4 = l->AraeHeight4;
 					
 					//- disable the Height information
 					if (!m_useHeight) H1 = H2 = H3 = H4 = 0;
@@ -393,7 +409,6 @@ void drawMap(int posX, int posY)
 
 						////// A /////
 						//-- ->1
-
 						float color = GRADIENT_COLOR[l->gradientA1];
 						glColor3f(color, color, color);
 
@@ -464,8 +479,18 @@ void drawMapObjects(int posX, int posY)
 {
 	//- screen position for Object
 	static const int YSTEP = (16 * 9 / 8) / 2;
+
+
+	//- range to display
+	int view_width = 0;
+	int view_height = 0;
+
+	glfwGetFramebufferSize(m_window, &view_width, &view_height);
+	view_width = view_width / 16;
+	view_height = view_height / YSTEP;
+
 	int outX = 0;
-	int outY = YSTEP * 68;
+	int outY = YSTEP * view_height;
 
 
 	glMatrixMode(GL_MODELVIEW);
@@ -484,7 +509,7 @@ void drawMapObjects(int posX, int posY)
 
 	glBegin(GL_QUADS);
 
-	for (int y = 68; y > 0; y--)
+	for (int y = view_height; y > 0; y--)
 	{
 		outX = (y % 2) * 8;
 		int sumY = posY + y;
@@ -493,7 +518,7 @@ void drawMapObjects(int posX, int posY)
 		{
 			unsigned int * pRowData = m_map_AraeHeightObject + (m_mapHeight - sumY -1)*m_mapWidth;
 
-			for (int x = 0; x < 60; x++)
+			for (int x = 0; x < view_width; x++)
 			{
 				int sumX = posX + x - y / 2;
 
@@ -523,10 +548,22 @@ void drawMapObjects(int posX, int posY)
 							}
 
 
-							//--   1 --- 4
-							//--   |     |
-							//--   |     |
-							//--   2 --- 3
+							//- disable the Height information
+							if (!m_useHeight) teraH = 0;
+
+
+							//- Landscape
+							//--      1 --- 4  ^
+							//--     / \ B /   |
+							//--    / A \ /    |YSTEP
+							//--   2 --- 3     v
+
+							//- Object
+							//--   1 --- 4   ^
+							//--   |     |   |
+							//--   |     |   | Object/texture Height
+							//--   |     |   | 
+							//--   2 --- 3   v
 
 							int curX = outX + textOb->xRel;
 							int curY = outY - textOb->yRel - textOb->height + teraH;
@@ -760,8 +797,8 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 		//--    / A  \  /    
 		//--   N2 --- N3    
 
-		pMapPos->AraeHeight2 = H2;
 		pMapPos->AraeHeight1 = H1;
+		pMapPos->AraeHeight2 = H2;
 		pMapPos->AraeHeight3 = H3;
 		pMapPos->AraeHeight4 = H4;
 
@@ -907,7 +944,8 @@ void loadResource()
 	clGFXFile gfxLand = clGFXFile("Siedler3_00.f8007e01f.dat");
 
 	//- create textur-Atlas and triangle-information-buffer
-	m_LandscapeText = new clLandscapeTextures(544, 576, 300);
+	//m_LandscapeText = new clLandscapeTextures(544, 576, 300);
+	m_LandscapeText = new clLandscapeTextures(2 << 8, 2 << 9, 300);
 
 	//- load map patterns and define triangles
 	clTexturesLoadHelper::load_map_patterns(m_LandscapeText, &gfxLand);

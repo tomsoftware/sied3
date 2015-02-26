@@ -61,47 +61,47 @@ bool clObjectTextures::AddTexturePlane(int gameObjectID, clGFXFile * gfxFileObj,
 	float textureAtlasWidth = (float)getWidth();
 
 
-		if (m_TexturesPos >= m_TexturesCount)
-		{
-			m_error.AddError("AddTexturePlane() Out of Texture-Objects-Space");
-			return false;
-		}
+	if (m_TexturesPos >= m_TexturesCount)
+	{
+		m_error.AddError("AddTexturePlane() Out of Texture-Objects-Space");
+		return false;
+	}
 
-		//- use next slot to store texture
-		ty_Objects * dest = &m_Textures[m_TexturesPos];
-
-
-		//- this is the first Item
-		m_TextureObject[gameObjectID].firstTexture = dest;
-		m_TextureObject[gameObjectID].frameCount = 1;
+	//- use next slot to store texture
+	ty_Objects * dest = &m_Textures[m_TexturesPos];
 
 
-		//- move to next free item
-		m_TexturesPos++;
+	//- this is the first Item
+	m_TextureObject[gameObjectID].firstTexture = dest;
+	m_TextureObject[gameObjectID].frameCount = 1;
 
 
-		//- read gfx image
-		gfxFileObj->getTextureObject(&gfxTexture, gfxTextureId, gfxShadowId, FrameIndex);
-
-		dest->height = gfxTexture.height;
-		dest->width = gfxTexture.width;
-		dest->xRel = gfxTexture.xRel;
-		dest->yRel = gfxTexture.yRel;
-
-		//- store gfx image
-		AddTexture(&texDestPos, gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height, 0);
-
-		dest->texture_x = texDestPos.x / textureAtlasWidth;
-		dest->texture_y = texDestPos.y / textureAtlasHeight;
-		dest->texture_r = (texDestPos.width + texDestPos.x) / textureAtlasWidth;
-		dest->texture_b = (texDestPos.height + texDestPos.y) / textureAtlasHeight;
+	//- move to next free item
+	m_TexturesPos++;
 
 
-		//- unload image data
-		gfxFileObj->unload_GFX_Object(&gfxTexture);
+	//- read gfx image
+	gfxFileObj->getTextureObject(&gfxTexture, gfxTextureId, gfxShadowId, FrameIndex);
+
+	dest->height = gfxTexture.height;
+	dest->width = gfxTexture.width;
+	dest->xRel = gfxTexture.xRel;
+	dest->yRel = gfxTexture.yRel;
+
+	//- store gfx image
+	AddTexture(&texDestPos, gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height, 0);
+
+	dest->texture_x = texDestPos.x / textureAtlasWidth;
+	dest->texture_y = texDestPos.y / textureAtlasHeight;
+	dest->texture_r = (texDestPos.width + texDestPos.x) / textureAtlasWidth;
+	dest->texture_b = (texDestPos.height + texDestPos.y) / textureAtlasHeight;
 
 
-		return true;
+	//- unload image data
+	gfxFileObj->unload_GFX_Object(&gfxTexture);
+
+
+	return true;
 }
 
 //-------------------------------------//
@@ -113,14 +113,14 @@ bool clObjectTextures::AddTexturePlaneSequenz(int gameObjectID, clGFXFile * gfxF
 		return false;
 	}
 
-	//- coutn of frames
+	//- frames count 
 	int count = gfxFileObj->getTextureObjectSequenzCount(gfxTextureId);
 
 
 	clGFXFile::GFXFILE_TextureObject gfxTexture;
 	tyTextureAtlasPos texDestPos;
 
-	//- size of Texture Atlas to calc GL texture position [0..1]
+	//- size of Texture Atlas to calc GL texture position. Range: [0..1]
 	float textureAtlasHeight = (float)getHeight();
 	float textureAtlasWidth = (float)getWidth();
 
@@ -137,12 +137,11 @@ bool clObjectTextures::AddTexturePlaneSequenz(int gameObjectID, clGFXFile * gfxF
 
 		if(frame == 0)
 		{
-			//- this is the first Item
+			//- this is the first item
 			m_TextureObject[gameObjectID].firstTexture = dest;
 			m_TextureObject[gameObjectID].frameCount = count;
 
 		}
-		
 
 		//- move to next free item
 		m_TexturesPos++;

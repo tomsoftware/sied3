@@ -21,14 +21,24 @@ clLandscapeTextures::~clLandscapeTextures()
 }
 
 
-//-------------------------------------//
+/// <summary>
+/// returns the unique ID for a triangle with the given corner values [p1], [p2], [p3]
+/// --   Type A      Type B
+/// --      1       1 --- 3
+/// --     / \       \ B / 
+/// --    / A \       \ /  
+/// --   2 --- 3       2
+/// </summary>
 unsigned int clLandscapeTextures::getTriangleMapId(unsigned char p1, unsigned char p2, unsigned char p3)
 {
 	return (((p1 << 8) | p2) << 8) | p3;
 }
 
 
-//-------------------------------------//
+/// <summary>
+/// Find the triangle-pos in [m_TriangleList].
+/// <return>&gt;0 on found; 0 on error; &lt;0 on not found: correct position is ABS(return)</return>
+/// </summary>
 int clLandscapeTextures::findTriangle(unsigned int TriangleMapId, bool returnNegativeIfNotFound)
 {
 	int minPos = 0;
@@ -331,6 +341,8 @@ bool clLandscapeTextures::AddTextureHexagon(clGFXFile * gfxFileObj, int gfxTextu
 	//-----------
 	//- part 1 - variation 1
 	gfxFileObj->getTextureLandscape(&gfxTexture, gfxTextureFromId_var1);
+	//- fix texture-background
+	EnlargeTexture(gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height, LANDSCAPE_MASK_COLOR1, LANDSCAPE_MASK_COLOR2);
 	//- copy image to tmp buffer
 	AddTexture(&atlasPos1, gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height);
 	//- unload image data
@@ -339,6 +351,8 @@ bool clLandscapeTextures::AddTextureHexagon(clGFXFile * gfxFileObj, int gfxTextu
 	//-----------
 	//- part 1 - variation 2
 	gfxFileObj->getTextureLandscape(&gfxTexture, gfxTextureFromId_var2);
+	//- fix texture-background
+	EnlargeTexture(gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height, LANDSCAPE_MASK_COLOR1, LANDSCAPE_MASK_COLOR2);
 	//- copy image to tmp buffer
 	AddTexture(&atlasPos2, gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height);
 	//- unload image data
@@ -352,6 +366,8 @@ bool clLandscapeTextures::AddTextureHexagon(clGFXFile * gfxFileObj, int gfxTextu
 	//-----------
 	//- part 2 - variation 1
 	gfxFileObj->getTextureLandscape(&gfxTexture, gfxTextureToId_var1);
+	//- fix texture-background
+	EnlargeTexture(gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height, LANDSCAPE_MASK_COLOR1, LANDSCAPE_MASK_COLOR2);
 	//- copy image to tmp buffer
 	AddTexture(&atlasPos1, gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height);
 	//- unload image data
@@ -361,6 +377,8 @@ bool clLandscapeTextures::AddTextureHexagon(clGFXFile * gfxFileObj, int gfxTextu
 	//-----------
 	//- part 2 - variation 2
 	gfxFileObj->getTextureLandscape(&gfxTexture, gfxTextureToId_var2);
+	//- fix texture-background
+	EnlargeTexture(gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height, LANDSCAPE_MASK_COLOR1, LANDSCAPE_MASK_COLOR2);
 	//- copy image to tmp buffer
 	AddTexture(&atlasPos2, gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height);
 	//- unload image data
@@ -522,4 +540,41 @@ bool clLandscapeTextures::AddTexturePlane128x128(clGFXFile * gfxFileObj, int gfx
 
 
 	return true;
+}
+
+
+/// <summary>
+/// to avoid Texture-mapping problems on the edges with open-gl we replace the background [maskColor1] and [maskColor2] of the image.
+///     .-----.           ..-----....
+///    /       \        ///       \\\
+///   /         \       //         \\
+///  :           :  to  :           :
+///   \         /       \\         //
+///    \       /        \\\       ///
+///     '-----'         ''''-----''''
+/// </summary>
+void clLandscapeTextures::EnlargeTexture(unsigned int * data, int width, int height, unsigned int maskColor1, unsigned int maskColor2)
+{
+	int pointCount = width * height;
+	unsigned int * in = data + 1; //- start at second pixle
+
+	//- this is not the correct way cause pixle on the left will set to the value of the last color of previous line
+	//- but we dont care about the right value!
+
+	for (int i = pointCount - 2; i > 0; i--)
+	{
+		if ((*in == maskColor1) || (*in == maskColor2))
+		{
+			if ((*(in + 1) != maskColor1) && (*(in + 1) != maskColor2))
+			{
+				*in = *(in + 1); //- use the color of the next point
+			}
+			else
+			{
+				*in = *(in - 1); //- use the color of the previous point
+			}
+		}
+
+		in++; //- next point
+	}
 }

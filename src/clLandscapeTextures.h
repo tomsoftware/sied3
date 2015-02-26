@@ -6,6 +6,7 @@
 #include "clGFXFile.h"
 #include "clTextureAtlas.h"
 
+
 class clLandscapeTextures :public clTextureAtlas
 {
 public:
@@ -27,7 +28,8 @@ public:
 	};
 	*/
 
-
+	const unsigned int LANDSCAPE_MASK_COLOR1 = 0x00ceffff;
+	const unsigned int LANDSCAPE_MASK_COLOR2 = 0x00ceEEff;
 
 	enum enumTextureType
 	{
@@ -75,6 +77,8 @@ public:
 	int AddTexturePlainColored32x32(unsigned char r, unsigned char g, unsigned char b);
 
 	void AddTextureMapping(int fromMapType1, int  fromMapType2, int  fromMapType3, int  toMapType1, int  toMapType2, int  toMapType3);
+
+	void EnlargeTexture(unsigned int * data, int width, int height, unsigned int maskColor1, unsigned int maskColor2);
 
 	GLuint getGLTextureId();
 	GLuint m_GLTextureID = NULL;

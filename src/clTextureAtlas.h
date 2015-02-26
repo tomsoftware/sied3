@@ -7,7 +7,25 @@
 #include "clError.h"
 #include "clGFXFile.h"
 
-
+/// <summary>
+/// A Texture Atlas is a image that contains multiple Textures. 
+///  - the size of the Image cant be changed after creating
+///  - New textures can be added with AddTexture()
+///  - use createGLTextureAtlas() to copy Image to GL-Buffer: THIS WILL DELETE THE image buffer!
+/// intern: For easy handling new textures there are so called slots. Every slot has a maximum height.
+///         If a new texture is added the smallest slot is selected and the new texture is copyed to
+///         the right end of the slot. If no slot is available, a new one, in a free space in the image
+///         will be generated
+/// +--+-----------+---------+ --
+/// |44|55555555555+----+    |
+/// |44|555 img 555|6666|    |
+/// |44|55555555555|6666|    |  Slot: max height: 4
+/// |44|55555555555|6666|    |
+/// +-----+---+----+----+-+  | --
+/// |11111+---+33333333333|  |
+/// |11111|222|33333333333|  |  Slot: max height: 2
+/// +-----+---+-----------+--+ --
+/// </summary>
 class clTextureAtlas
 {
 
@@ -43,9 +61,11 @@ class clTextureAtlas
 		GLuint createGLTextureAtlas();
 
 
-		void loadLandscapeTextureFromGFX(tyTextureAtlasPos * destPos, clGFXFile * gfxFileObj, int gfxTextureId);
-
+		/// <summary>
+		///  the count of used pixels. So fill rate will be : m_fillState / (getHeight()*getWidth())
+		/// </summary>
 		int m_fillState = 0; //- count of used pixels
+		
 
 		int getHeight();
 		int getWidth();
