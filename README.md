@@ -8,6 +8,11 @@ Features
 * render original settlers map file (some glitches)
 * render animations
 
+Run
+---
+This is a very early state! To run this you need to edit "src/clConfig.cpp" to set up your environment/pathes
+
+
 Status
 ------
 2014-10-17
