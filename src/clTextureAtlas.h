@@ -1,8 +1,7 @@
 #ifndef CLTEXTURE_ATLAS_H
 #define CLTEXTURE_ATLAS_H
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include "openGL.h"
 
 #include "clError.h"
 #include "clGFXFile.h"

@@ -641,7 +641,7 @@ bool clGFXFile::readShadowData(unsigned int * outImgData, int fileOffset, int wi
 	m_FR->setOffset(fileOffset);
 
 	int y = 0;
-	int x = 0; //- only for debuging!
+	int x = 0;
 	unsigned int * pOutStart = outImgData + y0*outImgWidth;
 	unsigned int * pOut = pOutStart + x0;
 

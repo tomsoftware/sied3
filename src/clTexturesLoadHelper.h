@@ -1,8 +1,7 @@
 #ifndef clTexturesLoadHelper_H
 #define clTexturesLoadHelper_H
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include "openGL.h"
 
 #include "clGFXFile.h"
 #include "clError.h"

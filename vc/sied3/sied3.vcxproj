@@ -89,6 +89,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\absBuilding.h" />
+    <ClCompile Include="..\..\src\clBuildingFactory.cpp" />
+    <ClCompile Include="..\..\src\clBuilding_r_smallTower.cpp" />
     <ClCompile Include="..\..\src\clConfig.cpp" />
     <ClCompile Include="..\..\src\clError.cpp" />
     <ClCompile Include="..\..\src\clFile.cpp" />
@@ -99,6 +102,7 @@
     <ClCompile Include="..\..\src\clLandscapeTextures.cpp" />
     <ClCompile Include="..\..\src\clMapFileReader.cpp" />
     <ClCompile Include="..\..\src\clObjectTextures.cpp" />
+    <ClCompile Include="..\..\src\clScreen.cpp" />
     <ClCompile Include="..\..\src\clShader.cpp" />
     <ClCompile Include="..\..\src\clTexturesLoadHelper.cpp" />
     <ClCompile Include="..\..\src\clTextureAtlas.cpp" />
@@ -115,10 +119,12 @@
     <ClInclude Include="..\..\src\clLandscapeTextures.h" />
     <ClInclude Include="..\..\src\clMapFileReader.h" />
     <ClInclude Include="..\..\src\clObjectTextures.h" />
+    <ClInclude Include="..\..\src\clScreen.h" />
     <ClInclude Include="..\..\src\clShader.h" />
     <ClInclude Include="..\..\src\clTexturesLoadHelper.h" />
     <ClInclude Include="..\..\src\clTextureAtlas.h" />
     <ClInclude Include="..\..\src\main.h" />
+    <ClInclude Include="..\..\src\openGL.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

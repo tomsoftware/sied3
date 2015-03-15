@@ -342,7 +342,7 @@ bool clLandscapeTextures::AddTextureHexagon(clGFXFile * gfxFileObj, int gfxTextu
 	//- part 1 - variation 1
 	gfxFileObj->getTextureLandscape(&gfxTexture, gfxTextureFromId_var1);
 	//- fix texture-background
-	EnlargeTexture(gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height, LANDSCAPE_MASK_COLOR1, LANDSCAPE_MASK_COLOR2);
+	fixTextureBackground(gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height, LANDSCAPE_MASK_COLOR1, LANDSCAPE_MASK_COLOR2);
 	//- copy image to tmp buffer
 	AddTexture(&atlasPos1, gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height);
 	//- unload image data
@@ -352,7 +352,7 @@ bool clLandscapeTextures::AddTextureHexagon(clGFXFile * gfxFileObj, int gfxTextu
 	//- part 1 - variation 2
 	gfxFileObj->getTextureLandscape(&gfxTexture, gfxTextureFromId_var2);
 	//- fix texture-background
-	EnlargeTexture(gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height, LANDSCAPE_MASK_COLOR1, LANDSCAPE_MASK_COLOR2);
+	fixTextureBackground(gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height, LANDSCAPE_MASK_COLOR1, LANDSCAPE_MASK_COLOR2);
 	//- copy image to tmp buffer
 	AddTexture(&atlasPos2, gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height);
 	//- unload image data
@@ -367,7 +367,7 @@ bool clLandscapeTextures::AddTextureHexagon(clGFXFile * gfxFileObj, int gfxTextu
 	//- part 2 - variation 1
 	gfxFileObj->getTextureLandscape(&gfxTexture, gfxTextureToId_var1);
 	//- fix texture-background
-	EnlargeTexture(gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height, LANDSCAPE_MASK_COLOR1, LANDSCAPE_MASK_COLOR2);
+	fixTextureBackground(gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height, LANDSCAPE_MASK_COLOR1, LANDSCAPE_MASK_COLOR2);
 	//- copy image to tmp buffer
 	AddTexture(&atlasPos1, gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height);
 	//- unload image data
@@ -378,7 +378,7 @@ bool clLandscapeTextures::AddTextureHexagon(clGFXFile * gfxFileObj, int gfxTextu
 	//- part 2 - variation 2
 	gfxFileObj->getTextureLandscape(&gfxTexture, gfxTextureToId_var2);
 	//- fix texture-background
-	EnlargeTexture(gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height, LANDSCAPE_MASK_COLOR1, LANDSCAPE_MASK_COLOR2);
+	fixTextureBackground(gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height, LANDSCAPE_MASK_COLOR1, LANDSCAPE_MASK_COLOR2);
 	//- copy image to tmp buffer
 	AddTexture(&atlasPos2, gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height);
 	//- unload image data
@@ -506,7 +506,7 @@ bool clLandscapeTextures::AddTexturePlane128x128(clGFXFile * gfxFileObj, int gfx
 	gfxFileObj->getTextureLandscape(&gfxTexture, gfxTextureId);
 	
 
-	//- to be able to use the left most cuttet edge triangle (x) we copy 8 pixle to the end of the texture
+	//- to be able to use the left most cuttet edge triangle (x) we copy 8 pixel to the end of the texture
 	//--  <------ 128 -----><-8>
 	//--  +-----+-----+-----+--+
 	//--  |\ B / \   / \   /|\ |
@@ -553,12 +553,12 @@ bool clLandscapeTextures::AddTexturePlane128x128(clGFXFile * gfxFileObj, int gfx
 ///    \       /        \\\       ///
 ///     '-----'         ''''-----''''
 /// </summary>
-void clLandscapeTextures::EnlargeTexture(unsigned int * data, int width, int height, unsigned int maskColor1, unsigned int maskColor2)
+void clLandscapeTextures::fixTextureBackground(unsigned int * data, int width, int height, unsigned int maskColor1, unsigned int maskColor2)
 {
 	int pointCount = width * height;
-	unsigned int * in = data + 1; //- start at second pixle
+	unsigned int * in = data + 1; //- start at second pixel
 
-	//- this is not the correct way cause pixle on the left will set to the value of the last color of previous line
+	//- this is not the correct way cause pixel on the left will set to the value of the last color of previous line
 	//- but we dont care about the right value!
 
 	for (int i = pointCount - 2; i > 0; i--)

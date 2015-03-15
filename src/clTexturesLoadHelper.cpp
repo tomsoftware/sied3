@@ -16,6 +16,14 @@ void clTexturesLoadHelper::load_map_patterns(clLandscapeTextures *objectTextures
 	objectTextures->AddTexturePlane128x128(gfxLand, 24, 128); //- polar/ice
 	objectTextures->AddTexturePlane128x128(gfxLand, 4, 144); //- mud
 
+	//- unused: Plane 128x128
+	//- 1   soil + grass
+	//-	2   brickearth
+	//-	3   sand
+	//-	35  Sand(trace?)
+	//-	36  dry sand(trace?)
+	//-	217 dark soil
+	//-	230 cement
 
 	//- between the different map-textures a blending is created.
 	//- for this a index-table is created containing all known edge-type-combinations

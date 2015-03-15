@@ -173,7 +173,7 @@ GLuint clTextureAtlas::createGLTextureAtlas()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-	m_error.AddDebug("Position: %ipx out of %ipx - pixle fillstate: %3.1f%%", m_filled_y_pos, m_height, ((m_fillState * 100.0) / (m_height*m_width)));
+	m_error.AddDebug("Position: %ipx out of %ipx - pixel fillstate: %3.1f%%", m_filled_y_pos, m_height, ((m_fillState * 100.0) / (m_height*m_width)));
 
 	//- delete image buffer
 	delete[] m_img_buffer;

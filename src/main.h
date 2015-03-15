@@ -8,17 +8,10 @@
 #define STRINGIFY(A) #A
 
 
-#define GLEW_STATIC
-
-
-// Include GLEW. Always include it before gl.h and glfw.h, since it's a bit magic.
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-
-//#pragma comment(lib, "glew32.lib")
 
 #include <iostream>
 
+#include "openGL.h"
 #include "clGFXFile.h"
 #include "clError.h"
 #include "clMapFileReader.h"
@@ -27,9 +20,8 @@
 #include "clLandscapeTextures.h"
 #include "clObjectTextures.h"
 #include "clShader.h"
-
-
-
+#include "clBuildingFactory.cpp"
+#include "clScreen.h"
 
 /*
 struct ty_Animation
@@ -89,21 +81,24 @@ void loadResource();
 void loadMap( const char * fileName, clMapFileReader::enum_map_folders mapType);
 void drawMap(int x, int y);
 void drawMapObjects(int posX, int posY);
+void drawMapBuildings(int posX, int posY);
 
 bool checkForGlError(const char * errorText);
 clError m_error = clError("main");
 
 GLFWwindow* m_window;
 
+clScreen m_Screen;
+clBuildingFactory BuildingsFactory;
 
 clTexturesLoadHelper::ty_TextureObject txBuild;
-clObjectTextures::ty_TextureObject *txObjects;
 clTexturesLoadHelper::ty_TextureObject txBuildings[256];
 clTexturesLoadHelper::ty_TextureObject txSied;
 clTexturesLoadHelper::ty_TextureObject txTorso;
 
 clLandscapeTextures * m_LandscapeText;
 clObjectTextures * m_ObjectText;
+clObjectTextures * m_BuldingsText;
 
 
 
@@ -225,6 +220,9 @@ ty_mapLandscape *m_map_landscape;
 int m_MarkerTextureTypeID;
 int m_ErrorTextureTypeID;
 
+absBuilding::tyBuilding *m_map_buildings;
+int m_map_buildings_count;
+
 unsigned int *m_map_AraeHeightObject = NULL;
 unsigned int *m_map_AccessiblePlayerResources = NULL;
 //unsigned int *m_map_AraeNeighbor = NULL;
@@ -260,7 +258,7 @@ enumGradient getGradientB(unsigned char H1, unsigned char H2, unsigned char H3);
 //void rendershadertest();
 
 //GLuint m_brightness; //- shader Variable
-//GLuint m_pixle_shader;
+//GLuint m_pixel_shader;
 //GLuint m_shader_Program;
 
 clShader m_map_shader;

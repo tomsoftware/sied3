@@ -182,6 +182,66 @@ bool clMapFileReader::readMapArea(unsigned int *outBuffer_AraeHeightObjects, int
 }
 
 
+//-------------------------------------//
+clMapFileReader::ty_Building * clMapFileReader::readMapBuildings(int * outBuildingsCount)
+{
+	ty_file_part *FPart = &m_fileParts[enum_map_file_parts::PART_TYPE_Buildings];
+
+	*outBuildingsCount = 0;
+
+	if (FPart->size == 0)
+	{
+		m_error.AddError("No building-information available in mapfile!");
+		return 0;
+	}
+
+	clFileReader FR = clFileReader(&m_File, FPart->offset, FPart->size);
+	doUncrypt(&FR, FPart);
+
+	int BuildingsCount = FR.readIntBE(4);
+
+	if ((BuildingsCount * 12 > FPart->size) || (BuildingsCount < 0))
+	{
+		m_error.AddError("Wrong Building-Count: %i ", BuildingsCount);
+		return 0;
+	}
+
+	m_error.AddDebug("Buildings: %i", BuildingsCount);
+
+	ty_Building * Buildings = new ty_Building[BuildingsCount];
+	ty_Building * building = Buildings;
+
+
+	for (int i = 0; i < BuildingsCount; i++)
+	{
+		building->party = FR.readIntBE(1);
+		building->BType = (enumBType) FR.readIntBE(1);
+		building->x_pos = FR.readIntBE(2);
+		building->y_pos = FR.readIntBE(2);
+
+		//If(BType_NameString(.BType) = "") Then MsgBox "unknown Building-Type: 0x" & Hex(.BType) & " " &.BType
+
+		building->unknown = FR.readIntBE(1);
+
+		int tmpI1 = FR.readIntBE(1);
+		int tmpI2 = FR.readIntBE(1);
+		int tmpI3 = FR.readIntBE(1);
+		int tmpI4 = FR.readIntBE(1);
+		int tmpI5 = FR.readIntBE(1);
+
+		//                     countSword1        countSword2      countSword3     countArcher1    countArcher2     countArcher3   countSpear1      countSpear2         countSpear3
+		//addBuildingSoldier i, tmpI1 / 16 And 15, tmpI1 And 15, tmpI3 / 16 And 15, tmpI3 And 15, tmpI2 / 16 And 15, tmpI2 And 15, tmpI5 / 16 And 15, tmpI5 And 15, tmpI4 / 16 And 15
+		//End With
+
+		//- next Building
+		building++;
+	}
+
+	*outBuildingsCount = BuildingsCount;
+	return Buildings;
+}
+
+
 
 //-------------------------------------//
 bool clMapFileReader::readMapInfo()

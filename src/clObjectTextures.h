@@ -10,7 +10,7 @@ class clObjectTextures :public clTextureAtlas
 {
 
 public:
-	struct ty_Objects
+	struct ty_Texture
 	{
 		float texture_x; //- texture pos x
 		float texture_y;
@@ -26,7 +26,8 @@ public:
 
 	struct ty_TextureObject
 	{
-		ty_Objects * firstTexture;
+		/// <summary>firstTexture: index in [m_Textures] of the first [ty_Texture]</summary>
+		int firstTexture;
 		int frameCount = 0;
 	};
 
@@ -40,7 +41,7 @@ private:
 
 	ty_TextureObject m_TextureObject[256];
 
-	ty_Objects * m_Textures;
+	ty_Texture * m_Textures;
 	int m_TexturesCount = 0;
 	int m_TexturesPos = 0;
 
@@ -48,7 +49,8 @@ public:
 	clObjectTextures(int TextureAtlasWidth, int TextureAtlasHeight, int ObjectCount);
 	~clObjectTextures();
 
-	ty_TextureObject * getObjectTexturs();
+	ty_TextureObject * getObjectTextures();
+	ty_Texture * getTextures();
 
 	GLuint getGLTextureId();
 	GLuint m_GLTextureID = NULL;

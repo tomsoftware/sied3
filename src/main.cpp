@@ -14,8 +14,9 @@ int main(int argc, char* argv[])
 	//loadMap( "flach.map", clMapFileReader::enum_map_folders::FOLDER_USER);
 	//loadMap("wueste_gras_wueste.map", clMapFileReader::enum_map_folders::FOLDER_USER);
 	
-	loadMap("M704-2-Longrun.map", clMapFileReader::enum_map_folders::FOLDER_MULTI);
+	//loadMap("M704-2-Longrun.map", clMapFileReader::enum_map_folders::FOLDER_MULTI);
 	//loadMap("leer1.map", clMapFileReader::enum_map_folders::FOLDER_USER);
+	loadMap("postest.map", clMapFileReader::enum_map_folders::FOLDER_USER);
 
 	loadShader();
 
@@ -131,6 +132,9 @@ void gameLoop()
 	int y0 = 150;
 
 
+	//- set texture handler objects
+	m_Screen.setTexture(m_ObjectText, clScreen::enumTextureObjectTypes::TEXTURE_OBJECTS);
+	m_Screen.setTexture(m_BuldingsText, clScreen::enumTextureObjectTypes::TEXTURE_BUILDINGS_ROMAN);
 
 
 	while (gameRunning)
@@ -138,14 +142,34 @@ void gameLoop()
 		//- set up View Point
 		setUpCam();
 
+		//- pixel-height of a map-row
+		static const int YSTEP = (16 * 9 / 8) / 2;
+		static const int XSTEP = 16;
 
-		//- clean Output
+		//- range to display
+		int view_width = 0;
+		int view_height = 0;
+
+		glfwGetFramebufferSize(m_window, &view_width, &view_height);
+		view_width = view_width / XSTEP;
+		view_height = view_height / YSTEP;
+
+		//- reset map-screen-buffer + clean Output
+		m_Screen.init(m_mapPosX, m_mapPosY, view_width, view_height);
+
 
 		//- draw Map
 		drawMap(m_mapPosX, m_mapPosY);
+
+		//- add decoration objects (Trees, stones, ...) to screen
 		drawMapObjects(m_mapPosX, m_mapPosY);
 
-		
+
+		//////////////////////
+		//- <Building>
+		drawMapBuildings(m_mapPosX, m_mapPosY);
+
+		m_Screen.render();
 
 		/*
 		//////////////////////
@@ -157,8 +181,7 @@ void gameLoop()
 
 
 
-		//////////////////////
-		//- <Building>
+
 		gfxBuilding.getTextureObject(&txBuild, renderer, BuildingID, BuildingID + 3, 0);
 		
 		SDL_Rect destPos1 = { (x0 + txBuild.xRel) * scale, (y0 + txBuild.yRel) * scale, txBuild.width * scale, txBuild.height * scale };
@@ -239,27 +262,7 @@ void gameLoop()
 		//sleep(1000);
 	}
 }
-/*
-//-------------------------------------//
-void drawObject(clGFXFile::GFX_ObjectTexture *texture, clGFXFile::GFX_ObjectSurface *torso, int x, int y, int scale)
-{
-	if (texture->image != NULL)
-	{
-		SDL_Rect destPos = { (texture->xRel + x)* scale, (texture->yRel + y) * scale, texture->width * scale, texture->height * scale };
-		SDL_RenderCopy(renderer, texture->image, NULL, &destPos);
-	}
 
-	if (torso->image != NULL)
-	{
-		SDL_Rect destPos = { (torso->xRel + x) * scale, (torso->yRel + y) * scale, torso->width * scale, torso->height * scale };
-		SDL_SetSurfacePalette(torso->image, palTorso);
-		SDL_Texture * tmpTex = SDL_CreateTextureFromSurface(renderer, torso->image);
-		SDL_SetTextureBlendMode(tmpTex, SDL_BLENDMODE_BLEND);
-		SDL_RenderCopy(renderer, tmpTex, NULL, &destPos);
-		SDL_DestroyTexture(tmpTex);
-	}
-}
-*/
 
 
 //-------------------------------------//
@@ -282,14 +285,11 @@ void drawMap(int posX, int posY)
 
 	//- the heigh of one line
 	static const int YSTEP = (16 * 9 / 8) / 2;
+	static const int XSTEP = 16;
 
 	//- range to display
-	int view_width = 0;
-	int view_height = 0;
-
-	glfwGetFramebufferSize(m_window, &view_width, &view_height);
-	view_width = view_width / 16;
-	view_height = view_height / YSTEP;
+	int view_width = m_Screen.getViewMapWidth();
+	int view_height = m_Screen.getViewMapHeight();
 
 
 
@@ -316,7 +316,7 @@ void drawMap(int posX, int posY)
 
 	for (int y = 0; y < view_height; y++)
 	{
-		outX = (y % 2) * 8;
+		outX = (y % 2) * (XSTEP/2);
 		int sumY = posY + y;
 
 		if ((sumY<m_mapHeight) && (sumY>=0))
@@ -475,56 +475,56 @@ void drawMap(int posX, int posY)
 
 
 //-------------------------------------//
+void drawMapBuildings(int posX, int posY)
+{
+
+	int buildings_count = m_map_buildings_count;
+	absBuilding::tyBuilding * building = m_map_buildings;
+	clScreen * screen = &m_Screen;
+
+	for (int i = buildings_count; i > 0; i--)
+	{
+		building->ProcessorClass->Draw(screen, building, posX, m_mapHeight - posY);
+
+		//- next Building
+		building++;
+	}
+
+}
+
+
+
+//-------------------------------------//
 void drawMapObjects(int posX, int posY)
 {
-	//- screen position for Object
-	static const int YSTEP = (16 * 9 / 8) / 2;
+
+	clObjectTextures::ty_TextureObject * txObjects = m_ObjectText->getObjectTextures();
+
 
 
 	//- range to display
-	int view_width = 0;
-	int view_height = 0;
-
-	glfwGetFramebufferSize(m_window, &view_width, &view_height);
-	view_width = view_width / 16;
-	view_height = view_height / YSTEP;
-
-	int outX = 0;
-	int outY = YSTEP * view_height;
+	int view_width = m_Screen.getViewMapWidth();
+	int view_height = m_Screen.getViewMapHeight();
 
 
-	glMatrixMode(GL_MODELVIEW);
-	glEnable(GL_TEXTURE_2D);
-	glLoadIdentity();
-
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	glBindTexture(GL_TEXTURE_2D, m_ObjectText->getGLTextureId());
-
-
-	
 	int gameLoopPos = m_GameLoopCounter;
 
 
-	glBegin(GL_QUADS);
-
 	for (int y = view_height; y > 0; y--)
 	{
-		outX = (y % 2) * 8;
-		int sumY = posY + y;
+		int map_pos_y =  (posY + y);
 
-		if ((sumY<m_mapHeight) && (sumY >= 0))
+		if ((map_pos_y < m_mapHeight) && (map_pos_y >= 0))
 		{
-			unsigned int * pRowData = m_map_AraeHeightObject + (m_mapHeight - sumY -1)*m_mapWidth;
+			unsigned int * pRowData = m_map_AraeHeightObject + (m_mapHeight - map_pos_y - 1) * m_mapWidth;
 
-			for (int x = 0; x < view_width; x++)
+			for (int x = view_width; x > 0; x--)
 			{
-				int sumX = posX + x - y / 2;
+				int map_pos_x = posX + x - y / 2;  //- because of the "Axonometric projection" we move the x to the side
 
-				if ((sumX < m_mapWidth) && (sumX >= 0))
+				if ((map_pos_x < m_mapWidth) && (map_pos_x >= 0))
 				{
-					int v = *(pRowData + sumX);
+					int v = *(pRowData + map_pos_x);
 
 					int objID = (v >> 16) & 0xFF;
 					int teraH = v & 0xFF;
@@ -535,64 +535,24 @@ void drawMapObjects(int posX, int posY)
 
 						if (obj->firstTexture != NULL)
 						{
-							clObjectTextures::ty_Objects * textOb;
+							int textIndex;
 
 							int seqCount = obj->frameCount;
 							if (seqCount > 1)
 							{
-								textOb = obj->firstTexture + ((gameLoopPos/2 + sumX + sumY / 2) % seqCount);
+								textIndex = obj->firstTexture + (gameLoopPos % seqCount);
 							}
 							else
 							{
-								textOb = obj->firstTexture;
+								textIndex = obj->firstTexture;
 							}
 
 
 							//- disable the Height information
 							if (!m_useHeight) teraH = 0;
-
-
-							//- Landscape
-							//--      1 --- 4  ^
-							//--     / \ B /   |
-							//--    / A \ /    |YSTEP
-							//--   2 --- 3     v
-
-							//- Object
-							//--   1 --- 4   ^
-							//--   |     |   |
-							//--   |     |   | Object/texture Height
-							//--   |     |   | 
-							//--   2 --- 3   v
-
-							int curX = outX + textOb->xRel;
-							int curY = outY - textOb->yRel - textOb->height + teraH;
-							int curW = textOb->width;
-							int curH = textOb->height;
-
-							float textX = textOb->texture_x;
-							float textY = textOb->texture_y;
-							float textRight = textOb->texture_r;
-							float textButton = textOb->texture_b;
-
-							////// A /////
-							//-- ->1
-							glTexCoord2f(textX, textY);
-							glVertex2i(curX, curY);
-
-							//-- ->2
-							glTexCoord2f(textX, textButton);
-							glVertex2i(curX, curY + curH);
-
-							//-- ->3
-							glTexCoord2f(textRight, textButton);
-							glVertex2i(curX + curW, curY + curH);
-
-							//-- ->4
-							glTexCoord2f(textRight, textY);
-							glVertex2i(curX + curW, curY);
-
-
+					
+							//- add texture to screen (map-pos and texture-pos are the same in this case)
+							m_Screen.addTexture(map_pos_x, map_pos_y, map_pos_x, map_pos_y, teraH, textIndex, clScreen::enumTextureObjectTypes::TEXTURE_OBJECTS);
 
 						}
 						else
@@ -601,15 +561,10 @@ void drawMapObjects(int posX, int posY)
 						}
 					}
 				}
-				outX += 16;
 			}
 		}
-		outY -= YSTEP;
 	}
 
-	glEnd();
-
-	glDisable(GL_TEXTURE_2D);
 }
 
 
@@ -706,6 +661,38 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 		delete [] m_map_landscape;
 		m_map_landscape = NULL;
 	}
+	if (m_map_buildings != NULL)
+	{
+		delete [] m_map_buildings;
+		m_map_buildings = NULL;
+	}
+
+
+	//- read buildings
+	m_map_buildings_count = 0;
+	clMapFileReader::ty_Building * buildings_info = map.readMapBuildings(&m_map_buildings_count);
+
+	m_map_buildings = new absBuilding::tyBuilding[m_map_buildings_count];
+
+	absBuilding::tyBuilding * building = m_map_buildings;
+
+	for (int i = m_map_buildings_count; i > 0; i--)
+	{
+		//- set the interpreter for this type of building
+		building->ProcessorClass = BuildingsFactory.getBuildingClassByMapType(buildings_info->BType);
+
+		if (building->ProcessorClass != NULL)
+		{
+			//- init the Building
+			building->ProcessorClass->init(building, buildings_info->x_pos, buildings_info->y_pos, 0);
+		}
+
+		//- next Building
+		buildings_info++;
+		building++;
+	}
+
+
 
 	int bufferSize = m_mapWidth*m_mapHeight;
 
@@ -898,43 +885,6 @@ void loadShader()
 
 
 
-/*
-//-------------------------------------//
-void initShader()
-{
-
-
-	//- Create a shader program
-	m_shader_Program = glCreateProgram();
-
-
-
-	m_pixle_shader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(m_pixle_shader, 1, &pixle_shader_source, 0);
-	glCompileShader(m_pixle_shader);
-	//clTexturesLoadHelper::checkForGlError("glCompileShader(m_pixle_shader)");
-	clTexturesLoadHelper::checkForGlShaderError(m_pixle_shader, "glCompileShader(m_pixle_shader)");
-
-
-	glAttachShader(m_shader_Program, m_pixle_shader);
-	clTexturesLoadHelper::checkForGlError("glAttachShader(m_shader_Program, m_pixle_shader)");
-
-	
-
-	//glShaderSource(vs, 1, &v, 0);
-	//vs = glCreateShader(GL_VERTEX_SHADER);
-	//glCompileShader(vs);
-	//glAttachShader(prog, vs);
-
-	glLinkProgram(m_shader_Program);
-	//clTexturesLoadHelper::checkForGlError("glLinkProgram(m_shader_Program)");
-	clTexturesLoadHelper::checkForGlShaderError(m_pixle_shader, "glAttachShader(m_shader_Program, m_pixle_shader)");
-
-
-	m_brightness = glGetUniformLocation(m_shader_Program, "r_brightness");
-	clTexturesLoadHelper::checkForGlError("glGetUniformLocation(r_brightness)");
-}
-*/
 
 //-------------------------------------//
 void loadResource()
@@ -973,11 +923,17 @@ void loadResource()
 
 	clTexturesLoadHelper::load_game_objects(m_ObjectText, &gfxObjects);
 
-	txObjects = m_ObjectText->getObjectTexturs();
-
 
 	//---------------------
 	//- load buildings
+
+
+	//- Buildings
+	m_BuldingsText = new clObjectTextures(128 * 16, 128 * 12, 400);
+	clGFXFile gfxBuilding = clGFXFile("Siedler3_13.f8007e01f.dat");
+
+
+	BuildingsFactory.LoadResources(m_BuldingsText, &gfxBuilding);
 
 	/*
 	//clGameObjects::load_game_buildings_roman(renderer, gfxObjects, txBuildings);
@@ -986,8 +942,6 @@ void loadResource()
 	//- Animation skripts
 	gfxAnimation.openGFXFile("Siedler3_15.f8007e01f.dat");
 
-	//- Buildings
-	gfxBuilding.openGFXFile("Siedler3_13.f8007e01f.dat");
 
 	//- Sägewerk
 	//gfxBuilding.getTextureObject(&txBuild, renderer, 1, 4, 0);
@@ -1106,9 +1060,10 @@ void mouse_click_callback(GLFWwindow *window, int button, int action, int mods)
 			mouseLeftDown = true;
 		}
 		else if (action == GLFW_RELEASE)
+		{
 			mouseLeftDown = false;
+		}
 	}
-
 	else if (button == GLFW_MOUSE_BUTTON_RIGHT)
 	{
 		if (action == GLFW_PRESS)
@@ -1116,7 +1071,9 @@ void mouse_click_callback(GLFWwindow *window, int button, int action, int mods)
 			mouseRightDown = true;
 		}
 		else if (action == GLFW_RELEASE)
+		{
 			mouseRightDown = false;
+		}
 	}
 
 	else if (button == GLFW_MOUSE_BUTTON_MIDDLE)
@@ -1126,7 +1083,9 @@ void mouse_click_callback(GLFWwindow *window, int button, int action, int mods)
 			mouseMiddleDown = true;
 		}
 		else if (action == GLFW_RELEASE)
+		{
 			mouseMiddleDown = false;
+		}
 	}
 }
 

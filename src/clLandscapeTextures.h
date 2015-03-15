@@ -78,7 +78,7 @@ public:
 
 	void AddTextureMapping(int fromMapType1, int  fromMapType2, int  fromMapType3, int  toMapType1, int  toMapType2, int  toMapType3);
 
-	void EnlargeTexture(unsigned int * data, int width, int height, unsigned int maskColor1, unsigned int maskColor2);
+	void fixTextureBackground(unsigned int * data, int width, int height, unsigned int maskColor1, unsigned int maskColor2);
 
 	GLuint getGLTextureId();
 	GLuint m_GLTextureID = NULL;

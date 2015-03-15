@@ -42,7 +42,7 @@ bool clShader::addFragmentShader(const char * ShaderCode)
 
 
 	glLinkProgram(m_program);
-	m_error.checkForGlShaderError(m_shader, "glAttachShader(m_shader_Program, m_pixle_shader)");
+	m_error.checkForGlShaderError(m_shader, "glAttachShader(m_shader_Program, m_pixel_shader)");
 
 
 	return true;

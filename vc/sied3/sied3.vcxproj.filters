@@ -19,6 +19,12 @@
     <Filter Include="Quelldateien\helpers">
       <UniqueIdentifier>{6b26aeb2-7ce1-4f56-866d-ebfab867056b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Quelldateien\Buildings">
+      <UniqueIdentifier>{b77db629-a6fe-46f3-b518-1deabb7bfc93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headerdateien\Buildings">
+      <UniqueIdentifier>{2b84bc79-a988-4139-b65b-293c556e755b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\main.cpp">
@@ -63,6 +69,18 @@
     <ClCompile Include="..\..\src\clShader.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\clBuilding_r_smallTower.cpp">
+      <Filter>Quelldateien\Buildings</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\clBuildingFactory.cpp">
+      <Filter>Quelldateien\Buildings</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\clScreen.cpp">
+      <Filter>Quelldateien\Buildings</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\absBuilding.h">
+      <Filter>Headerdateien\Buildings</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\main.h">
@@ -106,6 +124,12 @@
     </ClInclude>
     <ClInclude Include="..\..\src\clShader.h">
       <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\openGL.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\clScreen.h">
+      <Filter>Headerdateien\Buildings</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

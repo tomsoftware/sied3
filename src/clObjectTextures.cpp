@@ -5,7 +5,7 @@
 clObjectTextures::clObjectTextures(int TextureAtlasWidth, int TextureAtlasHeight, int ObjectCount)
 	: clTextureAtlas(TextureAtlasWidth, TextureAtlasHeight)
 {
-	m_Textures = new ty_Objects[ObjectCount];
+	m_Textures = new ty_Texture[ObjectCount];
 	m_TexturesCount = ObjectCount;
 	m_TexturesPos = 0;
 
@@ -24,10 +24,17 @@ clObjectTextures::~clObjectTextures()
 
 
 //-------------------------------------//
-clObjectTextures::ty_TextureObject * clObjectTextures::getObjectTexturs()
+clObjectTextures::ty_TextureObject * clObjectTextures::getObjectTextures()
 {
 	return m_TextureObject;
 }
+
+//-------------------------------------//
+clObjectTextures::ty_Texture * clObjectTextures::getTextures()
+{
+	return m_Textures;
+}
+
 
 
 //-------------------------------------//
@@ -68,11 +75,11 @@ bool clObjectTextures::AddTexturePlane(int gameObjectID, clGFXFile * gfxFileObj,
 	}
 
 	//- use next slot to store texture
-	ty_Objects * dest = &m_Textures[m_TexturesPos];
+	ty_Texture * dest = &m_Textures[m_TexturesPos];
 
 
 	//- this is the first Item
-	m_TextureObject[gameObjectID].firstTexture = dest;
+	m_TextureObject[gameObjectID].firstTexture = m_TexturesPos;
 	m_TextureObject[gameObjectID].frameCount = 1;
 
 
@@ -133,12 +140,12 @@ bool clObjectTextures::AddTexturePlaneSequenz(int gameObjectID, clGFXFile * gfxF
 		}
 
 		//- use next slot to store texture
-		ty_Objects * dest = &m_Textures[m_TexturesPos];
+		ty_Texture * dest = &m_Textures[m_TexturesPos];
 
 		if(frame == 0)
 		{
 			//- this is the first item
-			m_TextureObject[gameObjectID].firstTexture = dest;
+			m_TextureObject[gameObjectID].firstTexture = m_TexturesPos;
 			m_TextureObject[gameObjectID].frameCount = count;
 
 		}
