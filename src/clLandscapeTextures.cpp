@@ -344,7 +344,7 @@ bool clLandscapeTextures::AddTextureHexagon(clGFXFile * gfxFileObj, int gfxTextu
 	//- fix texture-background
 	fixTextureBackground(gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height, LANDSCAPE_MASK_COLOR1, LANDSCAPE_MASK_COLOR2);
 	//- copy image to tmp buffer
-	AddTexture(&atlasPos1, gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height);
+	AddTextureToAtlas(&atlasPos1, gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height);
 	//- unload image data
 	gfxFileObj->unload_GFX_Object(&gfxTexture);
 
@@ -354,7 +354,7 @@ bool clLandscapeTextures::AddTextureHexagon(clGFXFile * gfxFileObj, int gfxTextu
 	//- fix texture-background
 	fixTextureBackground(gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height, LANDSCAPE_MASK_COLOR1, LANDSCAPE_MASK_COLOR2);
 	//- copy image to tmp buffer
-	AddTexture(&atlasPos2, gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height);
+	AddTextureToAtlas(&atlasPos2, gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height);
 	//- unload image data
 	gfxFileObj->unload_GFX_Object(&gfxTexture);
 
@@ -369,7 +369,7 @@ bool clLandscapeTextures::AddTextureHexagon(clGFXFile * gfxFileObj, int gfxTextu
 	//- fix texture-background
 	fixTextureBackground(gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height, LANDSCAPE_MASK_COLOR1, LANDSCAPE_MASK_COLOR2);
 	//- copy image to tmp buffer
-	AddTexture(&atlasPos1, gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height);
+	AddTextureToAtlas(&atlasPos1, gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height);
 	//- unload image data
 	gfxFileObj->unload_GFX_Object(&gfxTexture);
 
@@ -380,7 +380,7 @@ bool clLandscapeTextures::AddTextureHexagon(clGFXFile * gfxFileObj, int gfxTextu
 	//- fix texture-background
 	fixTextureBackground(gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height, LANDSCAPE_MASK_COLOR1, LANDSCAPE_MASK_COLOR2);
 	//- copy image to tmp buffer
-	AddTexture(&atlasPos2, gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height);
+	AddTextureToAtlas(&atlasPos2, gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height);
 	//- unload image data
 	gfxFileObj->unload_GFX_Object(&gfxTexture);
 
@@ -405,7 +405,7 @@ int clLandscapeTextures::AddTexturePlainColored32x32(unsigned char r, unsigned c
 
 
 	//- copy image to tmp buffer
-	AddTexture(&atlasPos, (unsigned int *) &imageRGBA, 32, 32);
+	AddTextureToAtlas(&atlasPos, (unsigned int *) &imageRGBA, 32, 32);
 
 
 
@@ -458,7 +458,7 @@ bool clLandscapeTextures::AddTexturePlane32x32(clGFXFile * gfxFileObj, int gfxTe
 
 	gfxFileObj->getTextureLandscape(&gfxTexture, gfxTextureId);
 	//- copy image to tmp buffer
-	AddTexture(&atlasPos, gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height);
+	AddTextureToAtlas(&atlasPos, gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height);
 	//- unload image data
 	gfxFileObj->unload_GFX_Object(&gfxTexture);
 
@@ -516,7 +516,7 @@ bool clLandscapeTextures::AddTexturePlane128x128(clGFXFile * gfxFileObj, int gfx
 
 	
 	//- copy image to tmp buffer
-	AddTexture(&atlasPos, gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height, 8);
+	AddTextureToAtlas(&atlasPos, gfxTexture.imageRGBA, gfxTexture.width, gfxTexture.height, 8);
 	//- unload image data
 	gfxFileObj->unload_GFX_Object(&gfxTexture);
 

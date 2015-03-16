@@ -170,6 +170,8 @@ bool clMapFileReader::readMapArea(unsigned int *outBuffer_AraeHeightObjects, int
 			outBuffer_AraeHeightObjects = NULL;
 		}
 
+
+
 	}
 	else
 	{
@@ -211,13 +213,12 @@ clMapFileReader::ty_Building * clMapFileReader::readMapBuildings(int * outBuildi
 	ty_Building * Buildings = new ty_Building[BuildingsCount];
 	ty_Building * building = Buildings;
 
-
 	for (int i = 0; i < BuildingsCount; i++)
 	{
 		building->party = FR.readIntBE(1);
 		building->BType = (enumBType) FR.readIntBE(1);
 		building->x_pos = FR.readIntBE(2);
-		building->y_pos = FR.readIntBE(2);
+		building->y_pos = FR.readIntBE(2) - 1;
 
 		//If(BType_NameString(.BType) = "") Then MsgBox "unknown Building-Type: 0x" & Hex(.BType) & " " &.BType
 

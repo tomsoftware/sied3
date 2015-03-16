@@ -32,11 +32,10 @@ clScreen::~clScreen()
 /// <summary>Init/reset the screen class to a given map-display</summary>
 void clScreen::init(int map_view_left, int map_view_top, int map_view_width, int map_view_height)
 {
+	
 	if (map_view_height < 1) map_view_height = 1;
 	if (map_view_width < 1) map_view_width = 1;
-	if (map_view_left < 0) map_view_left = 0;
-	if (map_view_top < 0) map_view_top = 0;
-
+	
 	m_map_view_left = map_view_left;
 	m_map_view_top = map_view_top;
 	m_map_view_width = map_view_width;
@@ -84,14 +83,14 @@ int clScreen::getViewMapHeight()
 void clScreen::addTexture(int map_pos_x, int map_pos_y, int texture_map_pos_x, int texture_map_pos_y, int terrainHeight, int texture_id, enumTextureObjectTypes texture_object_type)
 {
 	int map_rel_y = texture_map_pos_y - m_map_view_top;
-	int map_rel_x = texture_map_pos_x - m_map_view_left + (map_rel_y / 2); //- because of the "Axonometric projection" we bend our [m_points] array
+	int map_rel_x = texture_map_pos_x - m_map_view_left - (map_rel_y / 2); //- because of the "Axonometric projection" we bend our [m_points] array
 
 	//- check if the texture is in the view?
 	if ((map_rel_x < 0) || (map_rel_x >= m_map_view_width)) return; //- out of range
 	if ((map_rel_y < 0) || (map_rel_y >= m_map_view_height)) return; //- out of range
 
 	//- the texture is saved at (texture_map_pos_x / texture_map_pos_y)
-	ty_point * p = &m_points[map_rel_x + (m_map_view_height-map_rel_y) * m_map_view_width];
+	ty_point * p = &m_points[map_rel_x + (map_rel_y) * m_map_view_width];
 
 	//- read Textur Informations
 	clObjectTextures::ty_Texture * TextureInfo = m_texture[texture_object_type]->getTextures() + texture_id;
@@ -101,8 +100,8 @@ void clScreen::addTexture(int map_pos_x, int map_pos_y, int texture_map_pos_x, i
 	int y = map_pos_y - m_map_view_top;
 
 
-	p->screen_pos_X = ((x + y / 2)*XSTEP + (y % 2) * XSTEP/2 ) + TextureInfo->xRel;
-	p->screen_pos_Y = y*YSTEP - TextureInfo->yRel - TextureInfo->height + terrainHeight; 
+	p->screen_pos_X = ((x - y / 2)*XSTEP - (y % 2) * XSTEP/2 ) + TextureInfo->xRel;
+	p->screen_pos_Y = y*YSTEP + TextureInfo->yRel - terrainHeight;
 
 	p->texture_object_type = texture_object_type;
 	p->texture_info = TextureInfo;
@@ -158,7 +157,7 @@ void clScreen::render()
 				if (TextureID != enumTextureObjectTypes::_TEXTURE_ELEMENT_COUNT_) glEnd();
 
 				TextureID = p->texture_object_type;
-				glBindTexture(GL_TEXTURE_2D, m_texture[TextureID]->createGLTextureAtlas());
+				glBindTexture(GL_TEXTURE_2D, m_texture[TextureID]->getGLTextureId());
 				glBegin(GL_QUADS);
 			}
 			
@@ -187,21 +186,25 @@ void clScreen::render()
 			float textButton = textureInfo->texture_b;
 
 			////// A /////
+
 			//-- ->1
-			glTexCoord2f(textX, textY);
+			glTexCoord2f(textX, textButton);//2
 			glVertex2i(curX, curY);
 
 			//-- ->2
-			glTexCoord2f(textX, textButton);
+			glTexCoord2f(textX, textY); //1
 			glVertex2i(curX, curY + curH);
 
 			//-- ->3
-			glTexCoord2f(textRight, textButton);
+			glTexCoord2f(textRight, textY);//4
 			glVertex2i(curX + curW, curY + curH);
 
 			//-- ->4
-			glTexCoord2f(textRight, textY);
+			glTexCoord2f(textRight, textButton);//3
+			
 			glVertex2i(curX + curW, curY);
+
+
 
 		}
 	}

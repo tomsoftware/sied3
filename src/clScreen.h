@@ -68,10 +68,10 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////////
 	/// <summary>Adds the object-texture to the screen buffer at a special pos</summary>
-	/// <param name='map_pos_x'>map position X of the Object</param>
-	/// <param name='map_pos_y'>map position Y of the Object</param>
-	/// <param name='texture_map_pos_x'>map position X of the Texture</param>
-	/// <param name='texture_map_pos_y'>map position Y of the Texture</param>
+	/// <param name="map_pos_x">map position X of the Object</param>
+	/// <param name="map_pos_y">map position Y of the Object</param>
+	/// <param name="texture_map_pos_x">map position X of the Texture</param>
+	/// <param name="texture_map_pos_y">map position Y of the Texture</param>
 	void addTexture(int map_pos_x, int map_pos_y, int texture_map_pos_x, int texture_map_pos_y, int terrainHeight, int texture_id, enumTextureObjectTypes texture_object_type);
 
 

@@ -50,12 +50,8 @@ clTextureAtlas::enumTexturSizeSlot clTextureAtlas::getSlotByHeight(int height)
 
 
 
-/// <summary>
-/// Adds a Binary-Image from [data] to the next free Image-Slot
-/// <param name="repeatWidth">append a part of the Binary-Image [data] to the right end of the image e.g. data=12345678 repeatWidth=2 out=1234567812</param>
-/// <return>[outTexturePos] with all information about the ney image</return>
-/// </summary>
-void clTextureAtlas::AddTexture(tyTextureAtlasPos *outTexturePos, unsigned int * data, int width, int height, int repeatWidth)
+//-------------------------------------//
+void clTextureAtlas::AddTextureToAtlas(tyTextureAtlasPos *outTexturePos, unsigned int * data, int width, int height, int repeatWidth)
 {
 	if (m_img_buffer == NULL) return;
 
@@ -150,12 +146,7 @@ void clTextureAtlas::copyimage(unsigned int *dest, unsigned int * src, int posX,
 	}
 }
 
-/// <summary>
-/// Create a Open-GL Texture out of this Atlas-Image and release the internal buffer.
-/// After this, adding a new Textures is not possible any more!
-/// Calling this Function multible times result in returning the same OpenGL Texture-ID
-/// <return>GLuint: the OpenGL Texture-ID of the Texture</return>
-/// </summary>
+//-------------------------------------//
 GLuint clTextureAtlas::createGLTextureAtlas()
 {
 	if (m_img_buffer == NULL) return m_GL_textureID;
@@ -173,7 +164,7 @@ GLuint clTextureAtlas::createGLTextureAtlas()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-	m_error.AddDebug("Position: %ipx out of %ipx - pixel fillstate: %3.1f%%", m_filled_y_pos, m_height, ((m_fillState * 100.0) / (m_height*m_width)));
+	m_error.AddDebug("Position %ipx out of %ipx - pixel fillstate: %3.1f%%", m_filled_y_pos, m_height, ((m_fillState * 100.0) / (m_height*m_width)));
 
 	//- delete image buffer
 	delete[] m_img_buffer;

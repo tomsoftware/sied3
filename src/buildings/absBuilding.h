@@ -1,11 +1,11 @@
 #ifndef absBuilding_H
 #define absBuilding_H
 
-#include "openGL.h"
+#include "../openGL.h"
 
-#include "clGFXFile.h"
-#include "clObjectTextures.h"
-#include "clScreen.h"
+#include "../clGFXFile.h"
+#include "../clObjectTextures.h"
+#include "../clScreen.h"
 
 //-http://strategywiki.org/wiki/The_Settlers_III/Buildings
 
@@ -16,7 +16,9 @@ public:
 	enum enumType
 	{
 		BUILDING_WOODCUTTER,
-		BUILDING_SMALL_TWOWER
+		BUILDING_SMALL_TWOWER,
+		BUILDING_CHARBURNER,
+		BUILDING_BLADESMITH,
 	};
 
 	enum enumState
@@ -60,7 +62,7 @@ public:
 	virtual void init(tyBuilding *building, int MapPos_x, int MapPos_y, unsigned char terrainHeight) = 0;
 
 	/// <summary>draw this building to screen</summary>
-	virtual void Draw(clScreen * Screen, tyBuilding *building, int screenPosX, int screenPosY) = 0;
+	virtual void Draw(clScreen * Screen, tyBuilding *building) = 0;
 
 	/// <summary>work... do the next step e.g. next Frame</summary>
 	virtual void Tick(tyBuilding *building) = 0;

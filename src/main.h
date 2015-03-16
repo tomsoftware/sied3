@@ -20,7 +20,7 @@
 #include "clLandscapeTextures.h"
 #include "clObjectTextures.h"
 #include "clShader.h"
-#include "clBuildingFactory.cpp"
+#include "buildings/clBuildingFactory.cpp"
 #include "clScreen.h"
 
 /*
@@ -217,8 +217,10 @@ struct ty_mapLandscape
 };
 
 ty_mapLandscape *m_map_landscape;
+#ifndef NDEBUG 
 int m_MarkerTextureTypeID;
 int m_ErrorTextureTypeID;
+#endif
 
 absBuilding::tyBuilding *m_map_buildings;
 int m_map_buildings_count;
@@ -231,12 +233,17 @@ int m_mapHeight=0;
 //void drawObject(clTexturesLoadHelper::ty_TextureObject *texture, clTexturesLoadHelper::ty_TextureObject *torso, int x, int y, int scale = 1);
 
 int m_mapPosX = 0;
-int m_mapPosY = 220;
+int m_mapPosY = 50;
 int m_MouseDownStartX = 0;
 int m_MouseDownStartY = 0;
 
+///<summery>mark special map-type</summery>
+#ifndef NDEBUG 
 int m_marker = -1;
 bool m_useHeight = true;
+#endif
+
+
 
 //clGFXFile gfxSied12;
 //clGFXFile gfxSied11;

@@ -1,24 +1,25 @@
 #include "absBuilding.h"
 
 
-class clBuilding_r_smallTower : public absBuilding
+class clBuilding_r_charburner : public absBuilding
 {
 
 private:
 
-	clTextureAtlas::tyTextureAtlasPos m_TexturePos;
+	int m_TexturePos = 0;
 public:
 
 	//-------------------------------------//
 	void LoadResources(clObjectTextures *Textures, clGFXFile *gfxBuilding)
 	{
-		Textures->AddTexturePlaneSequenz(absBuilding::enumType::BUILDING_SMALL_TWOWER, gfxBuilding, 17, 20);
+		Textures->createTextureInformation(absBuilding::enumType::BUILDING_CHARBURNER, 3);
+		m_TexturePos = Textures->setTextureInformation(absBuilding::enumType::BUILDING_CHARBURNER, 0, gfxBuilding, 30, 27, 0);
 	}
 
 	//-------------------------------------//
-	void Draw(clScreen * Screen, tyBuilding *building, int screenPosX, int screenPosY)
+	void Draw(clScreen * Screen, tyBuilding *building)
 	{
-		Screen->addTexture(building->posX, building->posY, building->posX, building->posY, building->terrainHeight, absBuilding::enumType::BUILDING_SMALL_TWOWER, clScreen::enumTextureObjectTypes::TEXTURE_BUILDINGS_ROMAN);
+		Screen->addTexture(building->posX, building->posY, building->posX, building->posY, building->terrainHeight, m_TexturePos, clScreen::enumTextureObjectTypes::TEXTURE_BUILDINGS_ROMAN);
 	}
 
 	//-------------------------------------//
@@ -50,7 +51,7 @@ public:
 	//-------------------------------------//
 	enumType getType()
 	{
-		return enumType::BUILDING_SMALL_TWOWER;
+		return enumType::BUILDING_CHARBURNER;
 	}
 
 };

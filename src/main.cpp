@@ -113,7 +113,7 @@ void setUpCam()
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(0.f, width, 0.f, height, 1.f, -1.f);
+	glOrtho(0.f, width, height, 0.f, 1.f, -1.f);
 }
 
 
@@ -316,36 +316,38 @@ void drawMap(int posX, int posY)
 
 	for (int y = 0; y < view_height; y++)
 	{
-		outX = (y % 2) * (XSTEP/2);
+		//- every second row starts halve an XSTEP shifted
+		outX = -(y % 2) * (XSTEP/2);
 		int sumY = posY + y;
 
 		if ((sumY<m_mapHeight) && (sumY>=0))
 		{
-			ty_mapLandscape * pRowData = m_map_landscape + (m_mapHeight - sumY - 1)*m_mapWidth;
+			ty_mapLandscape * pRowData = m_map_landscape + sumY*m_mapWidth;
 
 			for (int x = 0; x < view_width; x++)
 			{
-				int sumX = posX + x - y/2;
+				int sumX = posX + x + y / 2;
 
 				if ((sumX < m_mapWidth) && (sumX >= 0))
 				{
-					//--      + --- +  
+					//--      1 --- +  
 					//--     / \ B /   
 					//--    / A \ /    
-					//--   2 --- +     
-
+					//--   + --- +     
 
 					ty_mapLandscape * l = (pRowData + sumX);
 
 					int textMapPosA = l->textureMapPosA;
 					int textMapPosB = l->textureMapPosB;
 
-					//- for debugging we can switch one map-types (=m_marker) to white 
-					if (l->AraeType == m_marker)
-					{
-						textMapPosA = m_MarkerTextureTypeID;
-						textMapPosB = m_MarkerTextureTypeID;
-					}
+					#ifndef NDEBUG 
+						//- for debugging we can switch one map-types (=m_marker) to white 
+						if (l->AraeType == m_marker)
+						{
+							textMapPosA = m_MarkerTextureTypeID;
+							textMapPosB = m_MarkerTextureTypeID;
+						}
+					#endif
 
 					//- get Texture information
 					ty_textureMapPos * textA = &m_texturePos[textMapPosA];
@@ -395,8 +397,10 @@ void drawMap(int posX, int posY)
 					unsigned int H3 = l->AraeHeight3;
 					unsigned int H4 = l->AraeHeight4;
 					
-					//- disable the Height information
-					if (!m_useHeight) H1 = H2 = H3 = H4 = 0;
+					#ifndef NDEBUG 
+						//- disable the Height information
+						if (!m_useHeight) H1 = H2 = H3 = H4 = 0;
+					#endif
 
 
 					if (textureType != clLandscapeTextures::enumTextureType::TEXTURE_TYPE_NOT_FOUND)
@@ -413,22 +417,22 @@ void drawMap(int posX, int posY)
 						glColor3f(color, color, color);
 
 						glTexCoord2f(textX1 + textSizeWidthHalf, textY1 + textSizeHeight);
-						glVertex3i(outX + 8, outY + YSTEP + H1, 0);
+						glVertex3i(outX + 8, outY + H1, 0);
 
 						//-- ->2
 						color = GRADIENT_COLOR[l->gradientA2];
 						glColor3f(color, color, color);
 
 						glTexCoord2f(textX1, textY1);
-						glVertex3i(outX, outY + H2, 0);
+						glVertex3i(outX, outY + YSTEP + H2, 0);
 
 	
 						//-- ->3
-						color = GRADIENT_COLOR[l->gradientA3];
+						color = GRADIENT_COLOR[l->gradientA3]; 
 						glColor3f(color, color, color);
 
 						glTexCoord2f(textX1 + textSizeWidth, textY1);
-						glVertex3i(outX + 16, outY + H3, 0);
+						glVertex3i(outX + 16, outY + YSTEP + H3, 0);
 
 
 
@@ -439,21 +443,21 @@ void drawMap(int posX, int posY)
 						glColor3f(color, color, color);
 
 						glTexCoord2f(textX2, textY2 + textSizeHeight);
-						glVertex3i(outX + 8, outY + YSTEP + H1, 0);
+						glVertex3i(outX + 8, outY + H1, 0);
 
 						//-- ->3
 						color = GRADIENT_COLOR[l->gradientA3];
 						glColor3f(color, color, color);
 
 						glTexCoord2f(textX2 + textSizeWidthHalf, textY2);
-						glVertex3i(outX + 16, outY + H3, 0);
+						glVertex3i(outX + 16, outY + YSTEP + H3, 0);
 
 						//-- ->4
 						color = GRADIENT_COLOR[l->gradientA4];
 						glColor3f(color, color, color);
 
 						glTexCoord2f(textX2 + textSizeWidth, textY2 + textSizeHeight);
-						glVertex3i(outX + 8 + 16, outY + YSTEP + H4, 0);
+						glVertex3i(outX + 8 + 16, outY  + H4, 0);
 					}
 				}
 				outX += 16;
@@ -484,7 +488,7 @@ void drawMapBuildings(int posX, int posY)
 
 	for (int i = buildings_count; i > 0; i--)
 	{
-		building->ProcessorClass->Draw(screen, building, posX, m_mapHeight - posY);
+		if (building->ProcessorClass!=NULL)	building->ProcessorClass->Draw(screen, building);
 
 		//- next Building
 		building++;
@@ -516,11 +520,11 @@ void drawMapObjects(int posX, int posY)
 
 		if ((map_pos_y < m_mapHeight) && (map_pos_y >= 0))
 		{
-			unsigned int * pRowData = m_map_AraeHeightObject + (m_mapHeight - map_pos_y - 1) * m_mapWidth;
+			unsigned int * pRowData = m_map_AraeHeightObject + (map_pos_y) * m_mapWidth;
 
 			for (int x = view_width; x > 0; x--)
 			{
-				int map_pos_x = posX + x - y / 2;  //- because of the "Axonometric projection" we move the x to the side
+				int map_pos_x = posX + x + y / 2;  //- because of the "Axonometric projection" we move the x to the side
 
 				if ((map_pos_x < m_mapWidth) && (map_pos_x >= 0))
 				{
@@ -547,10 +551,11 @@ void drawMapObjects(int posX, int posY)
 								textIndex = obj->firstTexture;
 							}
 
+							#ifndef NDEBUG 
+								//- disable the Height information
+								if (!m_useHeight) teraH = 0;
+							#endif
 
-							//- disable the Height information
-							if (!m_useHeight) teraH = 0;
-					
 							//- add texture to screen (map-pos and texture-pos are the same in this case)
 							m_Screen.addTexture(map_pos_x, map_pos_y, map_pos_x, map_pos_y, teraH, textIndex, clScreen::enumTextureObjectTypes::TEXTURE_OBJECTS);
 
@@ -803,13 +808,17 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 		{
 			pMapPos->textureMapPosA = textureId;
 		}
+
 		else
 		{
-			//- this combination is not defined
-			pMapPos->textureMapPosA = m_ErrorTextureTypeID;
+			#ifndef NDEBUG 
+				//- this combination is not defined
+				pMapPos->textureMapPosA = m_ErrorTextureTypeID;
 			
-			m_error.AddError("map texture not found: %i %i %i", (int) N1, (int) N2, (int) N3);
+				m_error.AddError("map texture not found: %i %i %i", (int) N1, (int) N2, (int) N3);
+			#endif
 		}
+		
 
 		textureId = m_LandscapeText->getTriangleTextureID(N1, N3, N4);
 
@@ -819,10 +828,11 @@ void loadMap(const char * fileName, clMapFileReader::enum_map_folders  mapType)
 		}
 		else
 		{
-			//- this combination is not defined
-			pMapPos->textureMapPosB = m_ErrorTextureTypeID;
-
-			m_error.AddError("map texture not found: %i %i %i", (int) N1, (int) N3, (int) N4);
+			#ifndef NDEBUG 
+				//- this combination is not defined
+				pMapPos->textureMapPosB = m_ErrorTextureTypeID;
+				m_error.AddError("map texture not found: %i %i %i", (int) N1, (int) N3, (int) N4);
+			#endif
 		}
 
 		
@@ -901,14 +911,11 @@ void loadResource()
 	clTexturesLoadHelper::load_map_patterns(m_LandscapeText, &gfxLand);
 
 
-	//----
-	//- degugging Color-patterns
-
-	m_ErrorTextureTypeID = m_LandscapeText->AddTexturePlainColored32x32(255, 0, 0);
-	m_MarkerTextureTypeID = m_LandscapeText->AddTexturePlainColored32x32(0, 0, 0);
-
-	//- END degugging Colors
-
+	#ifndef NDEBUG 
+		//- degugging Color-patterns
+		m_ErrorTextureTypeID = m_LandscapeText->AddTexturePlainColored32x32(255, 0, 0);
+		m_MarkerTextureTypeID = m_LandscapeText->AddTexturePlainColored32x32(0, 0, 0);
+	#endif
 
 
 	
@@ -1003,38 +1010,36 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			case GLFW_KEY_ESCAPE: // ESCAPE
 				exit(0);
 				break;
-			case GLFW_KEY_KP_ADD:
-				m_marker++;
-				m_error.AddDebug("Marker: %i", m_marker);
-				break;
-			case GLFW_KEY_KP_SUBTRACT:
-				m_marker--;
-				m_error.AddDebug("Marker: %i", m_marker);
-				break;
-			case 'h':
-			case 'H':
-				m_useHeight = !m_useHeight;
-				break;
+
+			#ifndef NDEBUG 
+				case GLFW_KEY_KP_ADD:
+					m_marker++;
+					m_error.AddDebug("Marker: %i", m_marker);
+					break;
+				case GLFW_KEY_KP_SUBTRACT:
+					m_marker--;
+					m_error.AddDebug("Marker: %i", m_marker);
+					break;
+				case 'h':
+				case 'H':
+					m_useHeight = !m_useHeight;
+					break;
+			#endif
+
 			case 'd': // switch rendering modes (fill -> wire -> point)
 			case 'D':
 				drawMode = ++drawMode % 3;
 				if (drawMode == 0)        // fill mode
 				{
 					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-					//glEnable(GL_DEPTH_TEST);
-					glEnable(GL_CULL_FACE);
 				}
 				else if (drawMode == 1)  // wireframe mode
 				{
 					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-					//glDisable(GL_DEPTH_TEST);
-					glDisable(GL_CULL_FACE);
 				}
 				else                    // point mode
 				{
 					glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-					//glDisable(GL_DEPTH_TEST);
-					glDisable(GL_CULL_FACE);
 				}
 				break;
 		}
@@ -1054,8 +1059,10 @@ void mouse_click_callback(GLFWwindow *window, int button, int action, int mods)
 	{
 		if (action == GLFW_PRESS)
 		{
-			m_MouseDownStartX = (int)mouseX - m_mapPosX;
-			m_MouseDownStartY = m_mapPosY - m_mapHeight + (int) mouseY;
+			//- calc the start point of the Mouse down in map-coordinate-system
+			m_MouseDownStartY = m_mapPosY - (int) mouseY;
+			//- using "-(m_mapPosY)/2" to compensation the "Axonometric projection"
+			m_MouseDownStartX = (int) mouseX - m_mapPosX + (m_mapPosY / 2);
 
 			mouseLeftDown = true;
 		}
@@ -1094,15 +1101,21 @@ void mouse_move_callback(GLFWwindow *window, double xpos, double ypos)
 {
 	if (mouseLeftDown)
 	{
-		m_mapPosX = (int)xpos - m_MouseDownStartX;
-		m_mapPosY = m_mapHeight - ((int)ypos - m_MouseDownStartY);
+		//- precalc the view Heigth of the screen
+		int ViewHeigth = m_Screen.getViewMapHeight();
+		int ViewHeigth_Halve = ViewHeigth / 2;
 
 
-		if (m_mapPosX < -1) m_mapPosX = -1;
+		m_mapPosY = ((int)ypos + m_MouseDownStartY);
+		//- using "-(m_mapPosY)/2" to compensation the "Axonometric projection"
+		m_mapPosX = (int) xpos - m_MouseDownStartX + (m_mapPosY / 2);
+
+
+		if (m_mapPosX < -ViewHeigth_Halve) m_mapPosX = -ViewHeigth_Halve;
 		if (m_mapPosY < -1) m_mapPosY = -1;
 
-		if (m_mapPosX >= m_mapWidth) m_mapPosX = m_mapWidth-1;
-		if (m_mapPosY >= m_mapHeight) m_mapPosY = m_mapHeight-1;
+		if (m_mapPosX >= m_mapWidth - ViewHeigth_Halve) m_mapPosX = m_mapWidth - ViewHeigth_Halve;
+		if (m_mapPosY >= m_mapHeight - ViewHeigth) m_mapPosY = m_mapHeight - ViewHeigth;
 	}
 }
 

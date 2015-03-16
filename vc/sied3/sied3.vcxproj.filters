@@ -69,17 +69,20 @@
     <ClCompile Include="..\..\src\clShader.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\clBuilding_r_smallTower.cpp">
-      <Filter>Quelldateien\Buildings</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\clBuildingFactory.cpp">
-      <Filter>Quelldateien\Buildings</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\clScreen.cpp">
       <Filter>Quelldateien\Buildings</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\absBuilding.h">
-      <Filter>Headerdateien\Buildings</Filter>
+    <ClCompile Include="..\..\src\buildings\clBuildingFactory.cpp">
+      <Filter>Quelldateien\Buildings</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\buildings\clBuilding_r_bladesmith.cpp">
+      <Filter>Quelldateien\Buildings</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\buildings\clBuilding_r_charburner.cpp">
+      <Filter>Quelldateien\Buildings</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\buildings\clBuilding_r_smallTower.cpp">
+      <Filter>Quelldateien\Buildings</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -129,6 +132,9 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\clScreen.h">
+      <Filter>Headerdateien\Buildings</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\buildings\absBuilding.h">
       <Filter>Headerdateien\Buildings</Filter>
     </ClInclude>
   </ItemGroup>

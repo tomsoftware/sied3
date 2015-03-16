@@ -89,9 +89,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\absBuilding.h" />
-    <ClCompile Include="..\..\src\clBuildingFactory.cpp" />
-    <ClCompile Include="..\..\src\clBuilding_r_smallTower.cpp" />
+    <ClCompile Include="..\..\src\buildings\clBuildingFactory.cpp" />
+    <ClCompile Include="..\..\src\buildings\clBuilding_r_bladesmith.cpp" />
+    <ClCompile Include="..\..\src\buildings\clBuilding_r_charburner.cpp" />
+    <ClCompile Include="..\..\src\buildings\clBuilding_r_smallTower.cpp" />
     <ClCompile Include="..\..\src\clConfig.cpp" />
     <ClCompile Include="..\..\src\clError.cpp" />
     <ClCompile Include="..\..\src\clFile.cpp" />
@@ -109,6 +110,7 @@
     <ClCompile Include="..\..\src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\buildings\absBuilding.h" />
     <ClInclude Include="..\..\src\clConfig.h" />
     <ClInclude Include="..\..\src\clError.h" />
     <ClInclude Include="..\..\src\clFile.h" />
