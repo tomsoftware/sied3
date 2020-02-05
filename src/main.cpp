@@ -417,14 +417,14 @@ void drawMap(int posX, int posY)
 						glColor3f(color, color, color);
 
 						glTexCoord2f(textX1 + textSizeWidthHalf, textY1 + textSizeHeight);
-						glVertex3i(outX + 8, outY + H1, 0);
+						glVertex3i(outX + 8, outY - H1, 0);
 
 						//-- ->2
 						color = GRADIENT_COLOR[l->gradientA2];
 						glColor3f(color, color, color);
 
 						glTexCoord2f(textX1, textY1);
-						glVertex3i(outX, outY + YSTEP + H2, 0);
+						glVertex3i(outX, outY + YSTEP - H2, 0);
 
 	
 						//-- ->3
@@ -432,7 +432,7 @@ void drawMap(int posX, int posY)
 						glColor3f(color, color, color);
 
 						glTexCoord2f(textX1 + textSizeWidth, textY1);
-						glVertex3i(outX + 16, outY + YSTEP + H3, 0);
+						glVertex3i(outX + 16, outY + YSTEP - H3, 0);
 
 
 
@@ -443,21 +443,21 @@ void drawMap(int posX, int posY)
 						glColor3f(color, color, color);
 
 						glTexCoord2f(textX2, textY2 + textSizeHeight);
-						glVertex3i(outX + 8, outY + H1, 0);
+						glVertex3i(outX + 8, outY - H1, 0);
 
 						//-- ->3
 						color = GRADIENT_COLOR[l->gradientA3];
 						glColor3f(color, color, color);
 
 						glTexCoord2f(textX2 + textSizeWidthHalf, textY2);
-						glVertex3i(outX + 16, outY + YSTEP + H3, 0);
+						glVertex3i(outX + 16, outY + YSTEP - H3, 0);
 
 						//-- ->4
 						color = GRADIENT_COLOR[l->gradientA4];
 						glColor3f(color, color, color);
 
 						glTexCoord2f(textX2 + textSizeWidth, textY2 + textSizeHeight);
-						glVertex3i(outX + 8 + 16, outY  + H4, 0);
+						glVertex3i(outX + 8 + 16, outY  - H4, 0);
 					}
 				}
 				outX += 16;
@@ -950,7 +950,7 @@ void loadResource()
 	gfxAnimation.openGFXFile("Siedler3_15.f8007e01f.dat");
 
 
-	//- Sägewerk
+	//- SÃ¤gewerk
 	//gfxBuilding.getTextureObject(&txBuild, renderer, 1, 4, 0);
 
 	//- Forsthaus
